@@ -13,7 +13,7 @@ class PunctuationDataset:
     def __len__(self):
         return len(self.texts)
 
-    def tokenization_and_extending_labels(self, item):
+    def __getitem__(self, item):
         sentence = self.texts[item]
         text_label = self.labels[item]
 
@@ -47,9 +47,6 @@ class PunctuationDataset:
             "target_tag": torch.tensor(tags[0], dtype=torch.long),
         }
 
-    def __getitem__(self, item):
-        self.tokenization_and_extending_labels(item)
-
 
 if __name__=="__main__":
     df = pd.read_csv('../input/train.csv')
@@ -58,7 +55,7 @@ if __name__=="__main__":
     encoder = {t: i for i, t in enumerate(tag_values)}
     sentences = df.groupby("sentence")["word"].apply(list).values
     punc = df.groupby("sentence")["label"].apply(list).values
-    d = PunctuationDataset(sentences, punc, encoder).tokenization_and_extending_labels(0)
+    d = PunctuationDataset(sentences, punc, encoder).__getitem__(0)
     print(type(d))
     print(d['ids'])
     print(d['mask'])
