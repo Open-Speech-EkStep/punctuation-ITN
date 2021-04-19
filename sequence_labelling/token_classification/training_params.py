@@ -1,6 +1,8 @@
 import torch
 from transformers import AutoTokenizer
 
+TRAIN_DATA = '../input/train.csv'
+VALID_DATA = '../input/valid.csv'
 MAX_LEN = 128
 BATCH_SIZE = 2
 #DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

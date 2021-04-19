@@ -2,7 +2,7 @@ from dataset_loader import PunctuationDataset
 import pandas as pd
 import torch
 import training_params
-from tqdm import trange
+from tqdm import tqdm
 from seqeval.metrics import f1_score, accuracy_score
 from transformers import AlbertForTokenClassification, AdamW, get_linear_schedule_with_warmup
 import numpy as np
@@ -18,8 +18,8 @@ def process_data(data_csv):
     return sentences, labels, encoder, tag_values
 
 
-train_sentences, train_labels, train_encoder, tag_values = process_data('../input/train.csv')
-valid_sentences, valid_labels, _, _ = process_data('../input/valid.csv')
+train_sentences, train_labels, train_encoder, tag_values = process_data(training_params.TRAIN_DATA)
+valid_sentences, valid_labels, _, _ = process_data(training_params.VALID_DATA)
 
 train_dataset = PunctuationDataset(texts=train_sentences, labels=train_labels,
                                    tag2idx=train_encoder)
@@ -62,14 +62,17 @@ scheduler = get_linear_schedule_with_warmup(
 )
 
 loss_values, validation_loss_values = [], []
+model.to(training_params.DEVICE)
 
-for _ in trange(training_params.EPOCHS, desc="Epoch"):
+for epoch in range(training_params.EPOCHS):
 
     model.train()
     total_loss = 0
 
     # Training loop
-    for step, batch in enumerate(train_data_loader):
+    tk0 = tqdm(train_data_loader, total=int(len(train_data_loader)), unit='batch')
+    tk0.set_description(f'Epoch {epoch+1}')
+    for step, batch in enumerate(tk0):
         # add batch to gpu
         for k, v in batch.items():
             batch[k] = v.to(training_params.DEVICE)
@@ -80,8 +83,8 @@ for _ in trange(training_params.EPOCHS, desc="Epoch"):
 
         outputs = model(b_input_ids, token_type_ids=None,
                         attention_mask=b_input_mask, labels=b_labels)
-        loss = outputs[0]
 
+        loss = outputs[0]
         loss.backward()
 
         total_loss += loss.item()
@@ -127,8 +130,8 @@ for _ in trange(training_params.EPOCHS, desc="Epoch"):
     #print(true_labels)
     pred_tags = [tag_values[p_i] for p, l in zip(predictions, true_labels) for p_i, l_i in zip(p, l) if tag_values[l_i] != "PAD"]
     valid_tags = [tag_values[l_i] for l in true_labels for l_i in l if tag_values[l_i] != "PAD"]
-    print(pred_tags)
-    print(true_labels)
+    #print(pred_tags)
+    #print(true_labels)
     #print("Validation Accuracy: {}".format(accuracy_score(pred_tags, valid_tags)))
     #print("Validation F1-Score: {}".format(f1_score(pred_tags, valid_tags)))
     #print()
