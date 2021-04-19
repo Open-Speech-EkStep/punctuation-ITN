@@ -1,5 +1,4 @@
-from transformers import AutoModel, AutoTokenicd
-zer
+from transformers import AutoModel, AutoTokenizer
 
 MAX_LEN = 128
 TRAIN_BATCH_SIZE = 1
