@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 import training_params
 from tqdm import tqdm
-from seqeval.metrics import f1_score, accuracy_score
+from sklearn import metrics
 from transformers import AlbertForTokenClassification, AdamW, get_linear_schedule_with_warmup
 import numpy as np
 
@@ -107,6 +107,7 @@ for epoch in range(training_params.EPOCHS):
     eval_loss, eval_accuracy = 0, 0
     nb_eval_steps, nb_eval_examples = 0, 0
     predictions, true_labels = [], []
+
     for batch in valid_data_loader:
         for k, v in batch.items():
             batch[k] = v.to(training_params.DEVICE)
@@ -126,12 +127,10 @@ for epoch in range(training_params.EPOCHS):
     eval_loss = eval_loss / len(valid_data_loader)
     validation_loss_values.append(eval_loss)
     print("Validation loss: {}".format(eval_loss))
-    #print(predictions)
-    #print(true_labels)
+
     pred_tags = [tag_values[p_i] for p, l in zip(predictions, true_labels) for p_i, l_i in zip(p, l) if tag_values[l_i] != "PAD"]
     valid_tags = [tag_values[l_i] for l in true_labels for l_i in l if tag_values[l_i] != "PAD"]
-    #print(pred_tags)
-    #print(true_labels)
-    #print("Validation Accuracy: {}".format(accuracy_score(pred_tags, valid_tags)))
-    #print("Validation F1-Score: {}".format(f1_score(pred_tags, valid_tags)))
-    #print()
+
+    print("Validation Accuracy: {}".format(metrics.accuracy_score(pred_tags, valid_tags)))
+    print("Validation F1-Score: {}".format(metrics.f1_score(pred_tags, valid_tags, average='macro')))
+
