@@ -1,25 +1,65 @@
 import pandas as pd
-from sklearn import preprocessing
+from keras.preprocessing.sequence import pad_sequences
+from training_params import TOKENIZER
+import torch
 
 
 class PunctuationDataset:
-    def __init__(self, data_csv):
-        self.data_csv = data_csv
-
-    def sentence_label_getter(self):
-        df = pd.read_csv(self.data_csv, encoding='utf-8')
-        encode_label = preprocessing.LabelEncoder()
-        df.loc[:, "label"] = encode_label.fit_transform(df["label"])
-        sentences = df.groupby("sentence")["word"].apply(list).values
-        labels = df.groupby("sentence")["label"].apply(list).values
-        return sentences, labels
+    def __init__(self, texts, labels, tag2idx):
+        self.texts = texts
+        self.labels = labels
+        self.tag2idx = tag2idx
 
     def __len__(self):
-        df = pd.read_csv(self.data_csv, encoding='utf-8')
-        return len(df)
+        return len(self.texts)
+
+    def tokenization_and_extending_labels(self, item):
+        sentence = self.texts[item]
+        text_label = self.labels[item]
+
+        tokenized_sentence = []
+        labels = []
+
+        for word, label in zip(sentence, text_label):
+            # Tokenize the word and count number of subwords
+            tokenized_word = TOKENIZER.tokenize(word)
+            n_subwords = len(tokenized_word)
+
+            # Add the tokenized word to the final tokenized word list
+            tokenized_sentence.extend(tokenized_word)
+
+            # Add the same label to the new list of labels `n_subwords` times
+            labels.extend([label] * n_subwords)
+
+        input_ids = pad_sequences([TOKENIZER.convert_tokens_to_ids(tokenized_sentence)],
+                                  maxlen=128, dtype="long", value=0.0,
+                                  truncating="post", padding="post")
+
+        tags = pad_sequences([[self.tag2idx.get(l) for l in labels]],
+                             maxlen=128, value=self.tag2idx["PAD"], padding="post",
+                             dtype="long", truncating="post")
+
+        attention_masks = [float(i != 0.0) for i in input_ids[0]]
+
+        return {
+            "ids": torch.tensor(input_ids[0], dtype=torch.long),
+            "mask": torch.tensor(attention_masks, dtype=torch.long),
+            "target_tag": torch.tensor(tags[0], dtype=torch.long),
+        }
+
+    def __getitem__(self, item):
+        self.tokenization_and_extending_labels(item)
 
 
 if __name__=="__main__":
-    s, l = PunctuationDataset('../input/train.csv').sentence_label_getter()
-    print(s[0])
-    print(l[0])
+    df = pd.read_csv('../input/train.csv')
+    tag_values = list(set(df["label"].values))
+    tag_values.append("PAD")
+    encoder = {t: i for i, t in enumerate(tag_values)}
+    sentences = df.groupby("sentence")["word"].apply(list).values
+    punc = df.groupby("sentence")["label"].apply(list).values
+    d = PunctuationDataset(sentences, punc, encoder).tokenization_and_extending_labels(0)
+    print(type(d))
+    print(d['ids'])
+    print(d['mask'])
+    print(d['target_tag'])
