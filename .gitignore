@@ -13,6 +13,9 @@ data
 # model checkpoints 
 checkpoints
 
+#nohup
+*.out
+
 # Distribution / packaging
 .Python
 build/
