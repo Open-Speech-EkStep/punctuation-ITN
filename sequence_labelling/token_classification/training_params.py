@@ -9,5 +9,5 @@ BATCH_SIZE = 1
 DEVICE = 'cpu'
 TOKENIZER = AutoTokenizer.from_pretrained('ai4bharat/indic-bert')
 FULL_FINETUNING = True
-EPOCHS = 3
+EPOCHS = 10
 MAX_GRAD_NORM = 1.0

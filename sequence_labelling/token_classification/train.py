@@ -1,11 +1,16 @@
-from dataset_loader import PunctuationDataset
+import datetime
+import os
+
+import numpy as np
 import pandas as pd
 import torch
-import training_params
+from sklearn.metrics import accuracy_score, f1_score
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-from sklearn import metrics
 from transformers import AlbertForTokenClassification, AdamW, get_linear_schedule_with_warmup
-import numpy as np
+
+import training_params
+from dataset_loader import PunctuationDataset
 
 
 def process_data(data_csv):
@@ -17,6 +22,11 @@ def process_data(data_csv):
     encoder = {t: i for i, t in enumerate(tag_values)}
     return sentences, labels, encoder, tag_values
 
+
+log_folder = 'runs' + '/' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+os.makedirs(log_folder, exist_ok=True)
+
+writer = SummaryWriter(log_folder)
 
 train_sentences, train_labels, train_encoder, tag_values = process_data(training_params.TRAIN_DATA)
 valid_sentences, valid_labels, _, _ = process_data(training_params.VALID_DATA)
@@ -33,7 +43,6 @@ model = AlbertForTokenClassification.from_pretrained('ai4bharat/indic-bert',
                                                      num_labels=len(train_encoder),
                                                      output_attentions=False,
                                                      output_hidden_states=False)
-
 
 if training_params.FULL_FINETUNING:
     param_optimizer = list(model.named_parameters())
@@ -71,7 +80,7 @@ for epoch in range(training_params.EPOCHS):
 
     # Training loop
     tk0 = tqdm(train_data_loader, total=int(len(train_data_loader)), unit='batch')
-    tk0.set_description(f'Epoch {epoch+1}')
+    tk0.set_description(f'Epoch {epoch + 1}')
     for step, batch in enumerate(tk0):
         # add batch to gpu
         for k, v in batch.items():
@@ -98,6 +107,7 @@ for epoch in range(training_params.EPOCHS):
     # Calculate the average loss over the training data.
     avg_train_loss = total_loss / len(train_data_loader)
     print("Average train loss: {}".format(avg_train_loss))
+    writer.add_scalar("Training Loss", avg_train_loss, epoch)
 
     # Store the loss value for plotting the learning curve.
     loss_values.append(avg_train_loss)
@@ -127,10 +137,15 @@ for epoch in range(training_params.EPOCHS):
     eval_loss = eval_loss / len(valid_data_loader)
     validation_loss_values.append(eval_loss)
     print("Validation loss: {}".format(eval_loss))
+    writer.add_scalar("Validation Loss", eval_loss, epoch)
 
-    pred_tags = [tag_values[p_i] for p, l in zip(predictions, true_labels) for p_i, l_i in zip(p, l) if tag_values[l_i] != "PAD"]
+    pred_tags = [tag_values[p_i] for p, l in zip(predictions, true_labels) for p_i, l_i in zip(p, l) if
+                 tag_values[l_i] != "PAD"]
     valid_tags = [tag_values[l_i] for l in true_labels for l_i in l if tag_values[l_i] != "PAD"]
 
-    print("Validation Accuracy: {}".format(metrics.accuracy_score(pred_tags, valid_tags)))
-    print("Validation F1-Score: {}".format(metrics.f1_score(pred_tags, valid_tags, average='macro')))
-
+    val_accuracy = accuracy_score(pred_tags, valid_tags)
+    val_f1_score = f1_score(pred_tags, valid_tags, average='macro')
+    print("Validation Accuracy: {}".format(val_accuracy))
+    print("Validation F1-Score: {}".format(val_f1_score))
+    writer.add_scalar('Validation Accuracy', val_accuracy, epoch)
+    writer.add_scalar('Validation F1 score', val_f1_score, epoch)
