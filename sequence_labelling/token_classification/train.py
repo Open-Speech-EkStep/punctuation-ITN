@@ -80,6 +80,7 @@ scheduler = get_linear_schedule_with_warmup(
 loss_values, validation_loss_values = [], []
 model.to(training_params.DEVICE)
 
+step_count = 0
 for epoch in range(training_params.EPOCHS):
 
     model.train()
@@ -88,6 +89,7 @@ for epoch in range(training_params.EPOCHS):
     # Training loop
     tk0 = tqdm(train_data_loader, total=int(len(train_data_loader)), unit='batch')
     tk0.set_description(f'Epoch {epoch + 1}')
+
     for step, batch in enumerate(tk0):
         # add batch to gpu
         for k, v in batch.items():
@@ -102,8 +104,11 @@ for epoch in range(training_params.EPOCHS):
 
         loss = outputs[0]
         loss.backward()
-
         total_loss += loss.item()
+
+        # loss for step
+        writer.add_scalar("Training Loss- Step", loss, step_count)
+        step_count+=1
 
         torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=training_params.MAX_GRAD_NORM)
 
