@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn as nn
 from sklearn.metrics import accuracy_score, f1_score, classification_report
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
@@ -77,6 +78,10 @@ scheduler = get_linear_schedule_with_warmup(
     num_training_steps=total_steps
 )
 
+if torch.cuda.device_count() > 1:
+    print("Using ", torch.cuda.device_count(), "GPUs")
+    model = nn.DataParallel(model)
+
 loss_values, validation_loss_values = [], []
 model.to(training_params.DEVICE)
 
@@ -108,7 +113,7 @@ for epoch in range(training_params.EPOCHS):
 
         # loss for step
         writer.add_scalar("Training Loss- Step", loss, step_count)
-        step_count+=1
+        step_count += 1
 
         torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=training_params.MAX_GRAD_NORM)
 
