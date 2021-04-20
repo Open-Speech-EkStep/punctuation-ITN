@@ -1,16 +1,19 @@
 import datetime
 import os
+import warnings
 
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, classification_report
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from transformers import AlbertForTokenClassification, AdamW, get_linear_schedule_with_warmup
 
 import training_params
 from dataset_loader import PunctuationDataset
+
+warnings.filterwarnings('ignore')
 
 
 def process_data(data_csv):
@@ -23,8 +26,12 @@ def process_data(data_csv):
     return sentences, labels, encoder, tag_values
 
 
-log_folder = 'runs' + '/' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+folder_hook = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+log_folder = training_params.LOG_DIR + '/' + folder_hook
+checkpoint_folder = training_params.CHECKPOINT_DIR + '/' + folder_hook
+
 os.makedirs(log_folder, exist_ok=True)
+os.makedirs(checkpoint_folder, exist_ok=True)
 
 writer = SummaryWriter(log_folder)
 
@@ -109,6 +116,10 @@ for epoch in range(training_params.EPOCHS):
     print("Average train loss: {}".format(avg_train_loss))
     writer.add_scalar("Training Loss", avg_train_loss, epoch)
 
+    state = {'epoch': epoch,
+             'state_dict': model.state_dict(),
+             'optimizer': optimizer.state_dict()}
+    torch.save(state, checkpoint_folder + '/checkpoint_last.pt')
     # Store the loss value for plotting the learning curve.
     loss_values.append(avg_train_loss)
 
@@ -118,6 +129,7 @@ for epoch in range(training_params.EPOCHS):
     nb_eval_steps, nb_eval_examples = 0, 0
     predictions, true_labels = [], []
 
+    best_val_loss = np.inf
     for batch in valid_data_loader:
         for k, v in batch.items():
             batch[k] = v.to(training_params.DEVICE)
@@ -135,6 +147,14 @@ for epoch in range(training_params.EPOCHS):
         true_labels.extend(label_ids)
 
     eval_loss = eval_loss / len(valid_data_loader)
+
+    if eval_loss < best_val_loss:
+        state = {'epoch': epoch,
+                 'state_dict': model.state_dict(),
+                 'optimizer': optimizer.state_dict()}
+        torch.save(state, checkpoint_folder + '/checkpoint_best.pt')
+        best_val_loss = eval_loss
+
     validation_loss_values.append(eval_loss)
     print("Validation loss: {}".format(eval_loss))
     writer.add_scalar("Validation Loss", eval_loss, epoch)
@@ -147,5 +167,7 @@ for epoch in range(training_params.EPOCHS):
     val_f1_score = f1_score(pred_tags, valid_tags, average='macro')
     print("Validation Accuracy: {}".format(val_accuracy))
     print("Validation F1-Score: {}".format(val_f1_score))
+    print("Classification Report: {}".format(classification_report(pred_tags, valid_tags, output_dict=True,
+                                                                   labels=np.unique(pred_tags))))
     writer.add_scalar('Validation Accuracy', val_accuracy, epoch)
     writer.add_scalar('Validation F1 score', val_f1_score, epoch)

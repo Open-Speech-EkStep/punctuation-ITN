@@ -8,6 +8,10 @@ __pycache__/
 
 #Tensorboard runs
 runs
+# dataset directory
+data 
+# model checkpoints 
+checkpoints
 
 # Distribution / packaging
 .Python
