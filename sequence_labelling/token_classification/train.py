@@ -108,11 +108,11 @@ for epoch in range(training_params.EPOCHS):
                         attention_mask=b_input_mask, labels=b_labels)
 
         loss = outputs[0]
-        loss.backward()
-        total_loss += loss.item()
+        loss.sum().backward()
+        total_loss += loss.sum().item()
 
         # loss for step
-        writer.add_scalar("Training Loss- Step", loss, step_count)
+        writer.add_scalar("Training Loss- Step", loss.sum(), step_count)
         step_count += 1
 
         torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=training_params.MAX_GRAD_NORM)
@@ -140,7 +140,7 @@ for epoch in range(training_params.EPOCHS):
     predictions, true_labels = [], []
 
     best_val_loss = np.inf
-    for batch in valid_data_loader:
+    for batch in tqdm(valid_data_loader,total=int(len(valid_data_loader)), unit='batch', leave=True):
         for k, v in batch.items():
             batch[k] = v.to(training_params.DEVICE)
         b_input_ids, b_input_mask, b_labels = batch['ids'], batch['mask'], batch['target_tag']
