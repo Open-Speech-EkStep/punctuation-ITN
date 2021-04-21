@@ -45,7 +45,7 @@ valid_dataset = PunctuationDataset(texts=valid_sentences, labels=valid_labels,
                                    tag2idx=train_encoder)
 
 train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_size=training_params.BATCH_SIZE, num_workers=4)
-valid_data_loader = torch.utils.data.DataLoader(train_dataset, batch_size=training_params.BATCH_SIZE, num_workers=4)
+valid_data_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=training_params.BATCH_SIZE, num_workers=4)
 
 model = AlbertForTokenClassification.from_pretrained('ai4bharat/indic-bert',
                                                      num_labels=len(train_encoder),
