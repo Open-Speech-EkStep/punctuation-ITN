@@ -78,15 +78,30 @@ scheduler = get_linear_schedule_with_warmup(
     num_training_steps=total_steps
 )
 
+starting_epoch = 0
+
+if training_params.LOAD_CHECKPOINT:
+    checkpoint = torch.load(training_params.CHECKPOINT_PATH)
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+
+    for state in optimizer.state.values():
+        for k, v in state.items():
+            if torch.is_tensor(v):
+                state[k] = v.cuda()
+
+    starting_epoch = checkpoint['epoch'] + 1
+
+
 if torch.cuda.device_count() > 1:
     print("Using ", torch.cuda.device_count(), "GPUs")
     model = nn.DataParallel(model)
 
 loss_values, validation_loss_values = [], []
-model.to(training_params.DEVICE)
+model.cuda()
 
 step_count = 0
-for epoch in range(training_params.EPOCHS):
+for epoch in range(starting_epoch, training_params.EPOCHS):
 
     model.train()
     total_loss = 0

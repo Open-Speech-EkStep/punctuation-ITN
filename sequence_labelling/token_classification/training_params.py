@@ -12,3 +12,6 @@ EPOCHS = 100
 MAX_GRAD_NORM = 1.0
 CHECKPOINT_DIR = 'checkpoints'
 LOG_DIR = 'runs'
+LOAD_CHECKPOINT = False
+CHECKPOINT_PATH = 'checkpoints/2021-04-21_09-14-08/checkpoint_last.pt'
+
