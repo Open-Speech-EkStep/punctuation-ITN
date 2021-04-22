@@ -7,7 +7,8 @@ MODEL_PATH = '/home/neeraj/ekstep-speech-recognition/punctuation-ITN/en_itn/punc
 
 @st.cache(allow_output_mutation=True)
 def load_model():
-    model = PunctuationCapitalizationModel.restore_from(MODEL_PATH)
+    #model = PunctuationCapitalizationModel.restore_from(MODEL_PATH)
+    model = PunctuationCapitalizationModel.from_pretrained('punctuation_en_bert')
     return model
 
 
