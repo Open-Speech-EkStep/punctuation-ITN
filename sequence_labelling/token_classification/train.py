@@ -1,9 +1,8 @@
-import datetime
 import os
 import warnings
+import json
 
 import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, f1_score, classification_report
@@ -13,24 +12,12 @@ from transformers import AlbertForTokenClassification, AdamW, get_linear_schedul
 
 import training_params
 from dataset_loader import PunctuationDataset
+from utils import process_data, folder_with_time_stamps
 
 warnings.filterwarnings('ignore')
 
-
-def process_data(data_csv):
-    df = pd.read_csv(data_csv)
-    sentences = df.groupby("sentence")["word"].apply(list).values
-    labels = df.groupby("sentence")["label"].apply(list).values
-    tag_values = list(set(df["label"].values))
-    tag_values.append("PAD")
-    encoder = {t: i for i, t in enumerate(tag_values)}
-    return sentences, labels, encoder, tag_values
-
-
-folder_hook = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_folder = training_params.LOG_DIR + '/' + folder_hook
-checkpoint_folder = training_params.CHECKPOINT_DIR + '/' + folder_hook
-
+log_folder, checkpoint_folder, train_encoder_file_path = folder_with_time_stamps(training_params.LOG_DIR,
+                                                                                 training_params.CHECKPOINT_DIR)
 os.makedirs(log_folder, exist_ok=True)
 os.makedirs(checkpoint_folder, exist_ok=True)
 
@@ -38,6 +25,12 @@ writer = SummaryWriter(log_folder)
 
 train_sentences, train_labels, train_encoder, tag_values = process_data(training_params.TRAIN_DATA)
 valid_sentences, valid_labels, _, _ = process_data(training_params.VALID_DATA)
+
+with open(train_encoder_file_path, "w") as outfile:
+    json.dump(train_encoder, outfile)
+
+print("--------------------------------Tag Values----------------------------------")
+print(tag_values)
 
 train_dataset = PunctuationDataset(texts=train_sentences, labels=train_labels,
                                    tag2idx=train_encoder)
@@ -100,7 +93,7 @@ if torch.cuda.device_count() > 1:
 loss_values, validation_loss_values = [], []
 model.cuda()
 
-step_count = 0
+train_step_count = 0
 for epoch in range(starting_epoch, training_params.EPOCHS):
 
     model.train()
@@ -122,13 +115,13 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
         outputs = model(b_input_ids, token_type_ids=None,
                         attention_mask=b_input_mask, labels=b_labels)
 
-        loss = outputs[0]
-        loss.sum().backward()
-        total_loss += loss.sum().item()
+        loss = outputs[0].mean()
+        loss.backward()
+        total_loss += loss.item()
 
         # loss for step
-        writer.add_scalar("Training Loss- Step", loss.sum(), step_count)
-        step_count += 1
+        writer.add_scalar("Training Loss- Step", loss.sum(), train_step_count)
+        train_step_count += 1
 
         torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=training_params.MAX_GRAD_NORM)
 
@@ -155,7 +148,8 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
     predictions, true_labels = [], []
 
     best_val_loss = np.inf
-    for batch in tqdm(valid_data_loader,total=int(len(valid_data_loader)), unit='batch', leave=True):
+
+    for batch in tqdm(valid_data_loader, total=int(len(valid_data_loader)), unit='batch', leave=True):
         for k, v in batch.items():
             batch[k] = v.to(training_params.DEVICE)
         b_input_ids, b_input_mask, b_labels = batch['ids'], batch['mask'], batch['target_tag']
@@ -188,11 +182,11 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
                  tag_values[l_i] != "PAD"]
     valid_tags = [tag_values[l_i] for l in true_labels for l_i in l if tag_values[l_i] != "PAD"]
 
-    val_accuracy = accuracy_score(pred_tags, valid_tags)
-    val_f1_score = f1_score(pred_tags, valid_tags, average='macro')
+    val_accuracy = accuracy_score(valid_tags, pred_tags)
+    val_f1_score = f1_score(valid_tags, pred_tags, average='macro')
     print("Validation Accuracy: {}".format(val_accuracy))
     print("Validation F1-Score: {}".format(val_f1_score))
-    print("Classification Report: {}".format(classification_report(pred_tags, valid_tags, output_dict=True,
+    print("Classification Report: {}".format(classification_report(valid_tags, pred_tags, output_dict=True,
                                                                    labels=np.unique(pred_tags))))
     writer.add_scalar('Validation Accuracy', val_accuracy, epoch)
     writer.add_scalar('Validation F1 score', val_f1_score, epoch)
