@@ -13,6 +13,9 @@
 # limitations under the License.
 
 
+import pynini
+from pynini.lib import pynutil, utf8
+
 from data_loader_utils import get_abs_path
 from graph_utils import (
     NEMO_DIGIT,
@@ -43,89 +46,67 @@ class CardinalFst(GraphFst):
         super().__init__(name="cardinal", kind="classify")
         # integer, negative
 
-        graph_zero = pynini.string_file(get_abs_path("data/numbers/zero.tsv"))
-        graph_digit = pynini.string_file(get_abs_path("data/numbers/digit.tsv"))
-        graph_ties = pynini.string_file(get_abs_path("data/numbers/ties.tsv"))
-        graph_teen = pynini.string_file(get_abs_path("data/numbers/teen.tsv"))
+        NEMO_CHAR = utf8.VALID_UTF8_CHAR
+        NEMO_SIGMA = pynini.closure(NEMO_CHAR)
+        NEMO_SPACE = " "
+        NEMO_WHITE_SPACE = pynini.union(" ", "\t", "\n", "\r", u"\u00A0").optimize()
+        NEMO_NOT_SPACE = pynini.difference(NEMO_CHAR, NEMO_WHITE_SPACE).optimize()
+        # NEMO_NON_BREAKING_SPACE = u"\u00A0"
+
+        hindi_digit_file = './data/numbers/digit.tsv'
+        with open(hindi_digit_file) as f:
+            digits = f.readlines()
+        hindi_digits = ''.join([line.split()[-1] for line in digits])
+        hindi_digits_with_zero = "०" + hindi_digits
+        print(f'hindi digits is {hindi_digits}')
+        HINDI_DIGIT = pynini.union(*hindi_digits).optimize()
+        HINDI_DIGIT_WITH_ZERO = pynini.union(*hindi_digits_with_zero).optimize()
+
+        graph_zero = pynini.string_file("./data/numbers/zero.tsv")
+        graph_digit = pynini.string_file("./data/numbers/digit.tsv")
+        graph_tens = pynini.string_file("./data/numbers/hindi_tens.tsv")
+        # exceptions = pynini.string_file("./data/sentence_boundary_exceptions.txt")
 
         graph_hundred = pynini.cross("सौ", "")
-        # one hundred twenty three -> 
+
         graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred, pynutil.insert("०"))
         graph_hundred_component += delete_space
-        graph_hundred_component += pynini.union(
-            graph_teen | pynutil.insert("००"),
-            (graph_digit | pynutil.insert("०")) + delete_space + (graph_digit | pynutil.insert("०")),
-        )
-        # one hundred and twenty three
+        graph_hundred_component += pynini.union(graph_tens, pynutil.insert("०") + (graph_digit | pynutil.insert("०")))
+        # graph_hundred_component += pynini.union((graph_tens | pynutil.insert("०")) + delete_space + (graph_digit | pynutil.insert("०")),)
+
         graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component @ (
-            pynini.closure(NEMO_DIGIT) + (NEMO_DIGIT - "०") + pynini.closure(NEMO_DIGIT)
+                pynini.closure(HINDI_DIGIT_WITH_ZERO) + (HINDI_DIGIT_WITH_ZERO - "०") + pynini.closure(HINDI_DIGIT_WITH_ZERO)
         )
+        # graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component
         self.graph_hundred_component_at_least_one_none_zero_digit = (
             graph_hundred_component_at_least_one_none_zero_digit
         )
-
         graph_thousands = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("thousand"),
-            pynutil.insert("000", weight=0.1),
+            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("हज़ार"),
+            pynutil.insert("०००", weight=0.1)
         )
 
-        graph_million = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("million"),
-            pynutil.insert("000", weight=0.1),
-        )
-        graph_billion = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("billion"),
-            pynutil.insert("000", weight=0.1),
-        )
-        graph_trillion = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("trillion"),
-            pynutil.insert("000", weight=0.1),
-        )
-        graph_quadrillion = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("quadrillion"),
-            pynutil.insert("000", weight=0.1),
-        )
-        graph_quintillion = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("quintillion"),
-            pynutil.insert("000", weight=0.1),
-        )
-        graph_sextillion = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("sextillion"),
-            pynutil.insert("000", weight=0.1),
-        )
-
-        graph = pynini.union(
-            graph_sextillion
-            + delete_space
-            + graph_quintillion
-            + delete_space
-            + graph_quadrillion
-            + delete_space
-            + graph_trillion
-            + delete_space
-            + graph_billion
-            + delete_space
-            + graph_million
-            + delete_space
-            + graph_thousands
+        # fst = graph_thousands
+        fst = pynini.union(
+            graph_thousands
             + delete_space
             + graph_hundred_component,
             graph_zero,
         )
-
-        graph = graph @ pynini.union(
-            pynutil.delete(pynini.closure("0")) + pynini.difference(NEMO_DIGIT, "0") + pynini.closure(NEMO_DIGIT), "0"
+        fst = fst @ pynini.union(
+            pynutil.delete(pynini.closure("०")) + pynini.difference(HINDI_DIGIT_WITH_ZERO, "०") + pynini.closure(
+                HINDI_DIGIT_WITH_ZERO), "०"
         )
 
-        labels_exception = [num_to_word(x) for x in range(0, 5)]
-        graph_exception = pynini.union(*labels_exception)
-
-        graph = pynini.cdrewrite(pynutil.delete("and"), NEMO_SPACE, NEMO_SPACE, NEMO_SIGMA) @ graph
-
-        self.graph_no_exception = graph
-
-        #self.graph = (pynini.project(graph, "input") - graph_exception.arcsort()) @ graph
-        self.graph = (pynini.project(graph, "input")) @ graph
+        # labels_exception = [num_to_word(x) for x in range(0, 5)]
+        # graph_exception = pynini.union(*labels_exception)
+        #
+        # graph = pynini.cdrewrite(pynutil.delete("and"), NEMO_SPACE, NEMO_SPACE, NEMO_SIGMA) @ graph
+        #
+        self.graph_no_exception = fst
+        #
+        # #self.graph = (pynini.project(graph, "input") - graph_exception.arcsort()) @ graph
+        self.graph = (pynini.project(fst, "input")) @ fst
 
         optional_minus_graph = pynini.closure(
             pynutil.insert("negative: ") + pynini.cross("minus", "\"-\"") + NEMO_SPACE, 0, 1

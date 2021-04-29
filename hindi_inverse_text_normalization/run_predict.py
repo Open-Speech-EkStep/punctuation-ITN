@@ -57,9 +57,10 @@ def write_file(file_path: str, data: List[str]):
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--input", help="input file path", required=True, type=str)
-    parser.add_argument("--output", help="output file path", required=False, type=str)
     parser.add_argument("--verbose", help="print denormalization info. For debugging", action='store_true')
     parser.add_argument("--inverse_normalizer", default='nemo', type=str)
+    parser.add_argument("--output", help="output file path", required=False, type=str)
+
     return parser.parse_args()
 
 
@@ -71,8 +72,8 @@ if __name__ == "__main__":
     print("Loading data: " + file_path)
     data = load_file(file_path)
 
-    print("- Data: " + str(len(data)) + " sentences")
-    inverse_normalizer_prediction = inverse_normalizer(data, verbose=args.verbose)
+    # print("- Data: " + str(len(data)) + " sentences")
+    inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
     print(inverse_normalizer_prediction)
     # write_file(args.output, inverse_normalizer_prediction)
     # print(f"- Normalized. Writing out to {args.output}")
