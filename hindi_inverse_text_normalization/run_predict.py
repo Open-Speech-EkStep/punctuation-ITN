@@ -63,6 +63,14 @@ def parse_args():
 
     return parser.parse_args()
 
+def remove_starting_zeros(word, hindi_digits_with_zero):
+    if word[0] in hindi_digits_with_zero and len(word) > 1:
+        pos_non_zero_nums = [pos for pos, word in enumerate(list(word)) if word != "०"]
+        # print(pos_non_zero_nums, word)
+        first_non_zero_num = min(pos_non_zero_nums)
+        word = word[first_non_zero_num:]
+
+    return word
 
 if __name__ == "__main__":
     args = parse_args()
@@ -71,9 +79,20 @@ if __name__ == "__main__":
 
     print("Loading data: " + file_path)
     data = load_file(file_path)
+    hindi_digits_with_zero = '०१२३४५६६७८९'
 
     # print("- Data: " + str(len(data)) + " sentences")
     inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
+
+    astr_list = []
     print(inverse_normalizer_prediction)
+    print('-'*100)
+    inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
+    print(inverse_normalizer_prediction)
+    for sent in inverse_normalizer_prediction:
+        astr_list.append(' '.join([remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')]))
+
+    print('Trimmed output')
+    print(astr_list)
     # write_file(args.output, inverse_normalizer_prediction)
     # print(f"- Normalized. Writing out to {args.output}")
