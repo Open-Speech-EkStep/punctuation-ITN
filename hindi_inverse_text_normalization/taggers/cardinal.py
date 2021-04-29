@@ -63,16 +63,15 @@ class CardinalFst(GraphFst):
         HINDI_DIGIT_WITH_ZERO = pynini.union(*hindi_digits_with_zero).optimize()
 
         graph_zero = pynini.string_file("./data/numbers/zero.tsv")
-        graph_digit = pynini.string_file("./data/numbers/digit.tsv")
         graph_tens = pynini.string_file("./data/numbers/hindi_tens.tsv")
+        graph_digit = pynini.string_file("./data/numbers/digit.tsv")
         # exceptions = pynini.string_file("./data/sentence_boundary_exceptions.txt")
-
+        # print(graph_tens)
         graph_hundred = pynini.cross("सौ", "")
 
-        graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred, pynutil.insert("०"))
+        graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred + delete_space, pynutil.insert("०"))
         graph_hundred_component += delete_space
         graph_hundred_component += pynini.union(graph_tens, pynutil.insert("०") + (graph_digit | pynutil.insert("०")))
-        # graph_hundred_component += pynini.union((graph_tens | pynutil.insert("०")) + delete_space + (graph_digit | pynutil.insert("०")),)
 
         graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component @ (
                 pynini.closure(HINDI_DIGIT_WITH_ZERO) + (HINDI_DIGIT_WITH_ZERO - "०") + pynini.closure(HINDI_DIGIT_WITH_ZERO)
@@ -83,12 +82,26 @@ class CardinalFst(GraphFst):
         )
         graph_thousands = pynini.union(
             graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("हज़ार"),
-            pynutil.insert("०००", weight=0.1)
+            pynutil.insert("००", weight=0.1)
+        )
+
+        graph_lakhs = pynini.union(
+            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("लाख"),
+            pynutil.insert("००", weight=0.1)
+        )
+
+        graph_crore = pynini.union(
+            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("करोड़"),
+            pynutil.insert("००", weight=0.1)
         )
 
         # fst = graph_thousands
         fst = pynini.union(
-            graph_thousands
+            graph_crore
+            + delete_space
+            + graph_lakhs
+            + delete_space
+            + graph_thousands
             + delete_space
             + graph_hundred_component,
             graph_zero,
