@@ -65,7 +65,7 @@ def parse_args():
 
 def remove_starting_zeros(word, hindi_digits_with_zero):
     if word[0] in hindi_digits_with_zero and len(word) > 1:
-        pos_non_zero_nums = [pos for pos, word in enumerate(list(word)) if word != "०"]
+        pos_non_zero_nums = [pos for pos, word in enumerate(list(word)) if word != "0"]
         # print(pos_non_zero_nums, word)
         first_non_zero_num = min(pos_non_zero_nums)
         word = word[first_non_zero_num:]
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     print("Loading data: " + file_path)
     data = load_file(file_path)
-    hindi_digits_with_zero = '०१२३४५६६७८९'
+    hindi_digits_with_zero = '0123456789'
 
     # print("- Data: " + str(len(data)) + " sentences")
     inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
