@@ -65,12 +65,12 @@ class DecimalFst(GraphFst):
         )
 
         graph_decimal = pynini.string_file(get_abs_path("data/numbers/digit.tsv"))
-        graph_decimal |= pynini.string_file(get_abs_path("data/numbers/zero.tsv")) | pynini.cross("o", "0")
+        graph_decimal |= pynini.string_file(get_abs_path("data/numbers/zero.tsv")) | pynini.cross("शून्य", "0")
 
         graph_decimal = pynini.closure(graph_decimal + delete_space) + graph_decimal
         self.graph = graph_decimal
 
-        point = pynutil.delete("point")
+        point = pynutil.delete("दशमलव")
 
         optional_graph_negative = pynini.closure(
             pynutil.insert("negative: ") + pynini.cross("minus", "\"true\"") + delete_extra_space, 0, 1
