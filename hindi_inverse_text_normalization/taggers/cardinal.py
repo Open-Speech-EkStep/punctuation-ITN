@@ -57,42 +57,44 @@ class CardinalFst(GraphFst):
         with open(hindi_digit_file) as f:
             digits = f.readlines()
         hindi_digits = ''.join([line.split()[-1] for line in digits])
-        hindi_digits_with_zero = "०" + hindi_digits
+        hindi_digits_with_zero = "0" + hindi_digits
         print(f'hindi digits is {hindi_digits}')
         HINDI_DIGIT = pynini.union(*hindi_digits).optimize()
         HINDI_DIGIT_WITH_ZERO = pynini.union(*hindi_digits_with_zero).optimize()
 
         graph_zero = pynini.string_file("./data/numbers/zero.tsv")
-        graph_tens = pynini.string_file("./data/numbers/hindi_tens.tsv")
+        graph_tens = pynini.string_file("./data/numbers/hindi_tens_en.tsv")
         graph_digit = pynini.string_file("./data/numbers/digit.tsv")
-        # exceptions = pynini.string_file("./data/sentence_boundary_exceptions.txt")
-        # print(graph_tens)
+
         graph_hundred = pynini.cross("सौ", "")
 
-        graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred + delete_space, pynutil.insert("०"))
-        graph_hundred_component += delete_space
-        graph_hundred_component += pynini.union(graph_tens, pynutil.insert("०") + (graph_digit | pynutil.insert("०")))
+        graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred + delete_space, pynutil.insert("0"))
+        graph_hundred_component += pynini.union(graph_tens, pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
 
-        graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component @ (
-                pynini.closure(HINDI_DIGIT_WITH_ZERO) + (HINDI_DIGIT_WITH_ZERO - "०") + pynini.closure(HINDI_DIGIT_WITH_ZERO)
-        )
-        # graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component
+        # graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component @ (
+        #         pynini.closure(HINDI_DIGIT_WITH_ZERO) + (HINDI_DIGIT_WITH_ZERO - "०") + pynini.closure(HINDI_DIGIT_WITH_ZERO)
+        # )
+        graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component
+
+        graph_hundred_component_non_hundred = pynini.union(graph_tens, pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
+
+
         self.graph_hundred_component_at_least_one_none_zero_digit = (
             graph_hundred_component_at_least_one_none_zero_digit
         )
         graph_thousands = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("हज़ार"),
-            pynutil.insert("००", weight=0.1)
+            graph_hundred_component_non_hundred + delete_space + pynutil.delete("हज़ार"),
+            pynutil.insert("00", weight=0.1)
         )
 
         graph_lakhs = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("लाख"),
-            pynutil.insert("००", weight=0.1)
+            graph_hundred_component_non_hundred + delete_space + pynutil.delete("लाख"),
+            pynutil.insert("00", weight=0.1)
         )
 
         graph_crore = pynini.union(
-            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("करोड़"),
-            pynutil.insert("००", weight=0.1)
+            graph_hundred_component_non_hundred + delete_space + pynutil.delete("करोड़"),
+            pynutil.insert("00", weight=0.1)
         )
 
         # fst = graph_thousands
@@ -106,10 +108,10 @@ class CardinalFst(GraphFst):
             + graph_hundred_component,
             graph_zero,
         )
-        fst = fst @ pynini.union(
-            pynutil.delete(pynini.closure("०")) + pynini.difference(HINDI_DIGIT_WITH_ZERO, "०") + pynini.closure(
-                HINDI_DIGIT_WITH_ZERO), "०"
-        )
+        # fst = fst @ pynini.union(
+        #     pynutil.delete(pynini.closure("०")) + pynini.difference(HINDI_DIGIT_WITH_ZERO, "०") + pynini.closure(
+        #         HINDI_DIGIT_WITH_ZERO), "०"
+        # )
 
         # labels_exception = [num_to_word(x) for x in range(0, 5)]
         # graph_exception = pynini.union(*labels_exception)
