@@ -71,9 +71,16 @@ class CardinalFst(GraphFst):
         graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred + delete_space, pynutil.insert("0"))
         graph_hundred_component += pynini.union(graph_tens, pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
 
+        graph_hundred_component_prefix_tens = pynini.union(graph_tens + delete_space + graph_hundred + delete_space, pynutil.insert("00"))
+        graph_hundred_component_prefix_tens += pynini.union(graph_tens, pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
+
         # graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component @ (
         #         pynini.closure(HINDI_DIGIT_WITH_ZERO) + (HINDI_DIGIT_WITH_ZERO - "०") + pynini.closure(HINDI_DIGIT_WITH_ZERO)
         # )
+
+        graph_hundred_component = pynini.union(graph_hundred_component,
+                                               graph_hundred_component_prefix_tens)
+
         graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component
 
         graph_hundred_component_non_hundred = pynini.union(graph_tens, pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
