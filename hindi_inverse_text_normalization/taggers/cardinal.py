@@ -68,11 +68,15 @@ class CardinalFst(GraphFst):
 
         graph_hundred = pynini.cross("सौ", "")
 
-        graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred + delete_space, pynutil.insert("0"))
+        graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred + delete_space,
+                                               pynutil.insert("0"))
         graph_hundred_component += pynini.union(graph_tens, pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
 
-        graph_hundred_component_prefix_tens = pynini.union(graph_tens + delete_space + graph_hundred + delete_space, pynutil.insert("00"))
-        graph_hundred_component_prefix_tens += pynini.union(graph_tens, pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
+        # handling double digit hundreds like उन्निस सौ + digit/thousand/lakh/crore etc
+        graph_hundred_component_prefix_tens = pynini.union(graph_tens + delete_space + graph_hundred + delete_space,
+                                                           pynutil.insert("00"))
+        graph_hundred_component_prefix_tens += pynini.union(graph_tens,
+                                                            pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
 
         # graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component @ (
         #         pynini.closure(HINDI_DIGIT_WITH_ZERO) + (HINDI_DIGIT_WITH_ZERO - "०") + pynini.closure(HINDI_DIGIT_WITH_ZERO)
@@ -83,28 +87,29 @@ class CardinalFst(GraphFst):
 
         graph_hundred_component_at_least_one_none_zero_digit = graph_hundred_component
 
-        graph_hundred_component_non_hundred = pynini.union(graph_tens, pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
-
+        # graph_hundred_component_non_hundred = pynini.union(graph_tens,
+        #                                                    pynutil.insert("0") + (graph_digit | pynutil.insert("0")))
 
         self.graph_hundred_component_at_least_one_none_zero_digit = (
             graph_hundred_component_at_least_one_none_zero_digit
         )
+
         graph_thousands = pynini.union(
-            graph_hundred_component_non_hundred + delete_space + pynutil.delete("हज़ार"),
-            pynutil.insert("00", weight=0.1)
+            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("हज़ार"),
+            pynutil.insert("00", weight=0.1),
         )
 
         graph_lakhs = pynini.union(
-            graph_hundred_component_non_hundred + delete_space + pynutil.delete("लाख"),
+            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("लाख"),
             pynutil.insert("00", weight=0.1)
         )
 
         graph_crore = pynini.union(
-            graph_hundred_component_non_hundred + delete_space + pynutil.delete("करोड़"),
+            graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("करोड़"),
             pynutil.insert("00", weight=0.1)
         )
 
-        # fst = graph_thousands
+        fst = graph_thousands
         fst = pynini.union(
             graph_crore
             + delete_space
@@ -115,6 +120,19 @@ class CardinalFst(GraphFst):
             + graph_hundred_component,
             graph_zero,
         )
+
+        # inverse_order_fst = pynini.union(
+        #     graph_hundred_component
+        #     + delete_space
+        #     + graph_thousands
+        #     + delete_space
+        #     + graph_lakhs
+        #     + delete_space
+        #     + graph_crore,
+        # )
+
+        # fst = pynini.union(inverse_order_fst + fst, fst, inverse_order_fst)
+        # fst = inverse_order_fst
         # fst = fst @ pynini.union(
         #     pynutil.delete(pynini.closure("०")) + pynini.difference(HINDI_DIGIT_WITH_ZERO, "०") + pynini.closure(
         #         HINDI_DIGIT_WITH_ZERO), "०"
