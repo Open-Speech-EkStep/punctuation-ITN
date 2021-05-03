@@ -65,6 +65,8 @@ def parse_args():
 
 def remove_starting_zeros(word, hindi_digits_with_zero):
     if word[0] in hindi_digits_with_zero and len(word) > 1:
+        if all([digit=="0" for digit in list(word)]):
+            return "1"+word
         pos_non_zero_nums = [pos for pos, word in enumerate(list(word)) if word != "0"]
         # print(pos_non_zero_nums, word)
         first_non_zero_num = min(pos_non_zero_nums)
@@ -91,6 +93,15 @@ if __name__ == "__main__":
 
     print("Loading data: " + file_path)
     data = load_file(file_path)
+
+    # updated_sentences = []
+    # for sent in data:
+    #     if "हज़ार करोड़" in sent:
+    #         sent = sent.replace("हज़ार करोड़", "हज़ार करोड")
+    #     updated_sentences.append(sent)
+    #
+    # data = updated_sentences
+
     hindi_digits_with_zero = '0123456789'
 
     # print("- Data: " + str(len(data)) + " sentences")
@@ -103,6 +114,8 @@ if __name__ == "__main__":
     inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
     print(inverse_normalizer_prediction)
     for sent in inverse_normalizer_prediction:
+        if "करोड" in sent:
+            sent = sent.replace("करोड", "करोड़")
         trimmed_sent = ' '.join([remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
         astr_list.append(trimmed_sent)
         comma_sep_num_list.append(
