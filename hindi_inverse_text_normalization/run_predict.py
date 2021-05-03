@@ -17,7 +17,6 @@ from typing import List
 
 from inverse_normalize import INVERSE_NORMALIZERS
 
-
 '''
 Runs denormalization prediction on text data
 '''
@@ -63,6 +62,7 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def remove_starting_zeros(word, hindi_digits_with_zero):
     if word[0] in hindi_digits_with_zero and len(word) > 1:
         pos_non_zero_nums = [pos for pos, word in enumerate(list(word)) if word != "0"]
@@ -71,6 +71,18 @@ def remove_starting_zeros(word, hindi_digits_with_zero):
         word = word[first_non_zero_num:]
 
     return word
+
+
+def indian_format(word, hindi_digits_with_zero):
+    if word[0] in hindi_digits_with_zero:
+        s, *d = str(word).partition(".")
+        # getting [num_before_decimal_point, decimal_point, num_after_decimal_point]
+        r = ",".join([s[x - 2:x] for x in range(-3, -len(s), -2)][::-1] + [s[-3:]])
+        # adding commas after every 2 digits after the last 3 digits
+        return "".join([r] + d)  # joining decimal points as is
+    else:
+        return word
+
 
 if __name__ == "__main__":
     args = parse_args()
@@ -85,14 +97,21 @@ if __name__ == "__main__":
     inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
 
     astr_list = []
+    comma_sep_num_list = []
     print(inverse_normalizer_prediction)
-    print('-'*100)
+    print('-' * 100)
     inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
     print(inverse_normalizer_prediction)
     for sent in inverse_normalizer_prediction:
-        astr_list.append(' '.join([remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')]))
+        trimmed_sent = ' '.join([remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
+        astr_list.append(trimmed_sent)
+        comma_sep_num_list.append(
+            ' '.join([indian_format(word, hindi_digits_with_zero) for word in trimmed_sent.split(' ')]))
 
     print('Trimmed output')
     print(astr_list)
+    print('-' * 100)
+    print('Indian Format nums output')
+    print(comma_sep_num_list)
     # write_file(args.output, inverse_normalizer_prediction)
     # print(f"- Normalized. Writing out to {args.output}")
