@@ -67,6 +67,8 @@ class CardinalFst(GraphFst):
         graph_digit = pynini.string_file("./data/numbers/digit.tsv")
 
         graph_hundred = pynini.cross("सौ", "")
+        graph_crore = pynini.cross("करोड़", "0000000")
+        graph_lakh = pynini.cross("लाख", "00000")
 
         graph_hundred_component = pynini.union(graph_digit + delete_space + graph_hundred + delete_space,
                                                pynutil.insert("0"))
@@ -94,32 +96,36 @@ class CardinalFst(GraphFst):
             graph_hundred_component_at_least_one_none_zero_digit
         )
 
-        graph_thousands = pynini.union(
+        graph_thousands_component = pynini.union(
             graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("हज़ार"),
             pynutil.insert("00", weight=0.1),
         )
 
-        graph_lakhs = pynini.union(
+        graph_lakhs_component = pynini.union(
             graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("लाख"),
             pynutil.insert("00", weight=0.1)
         )
 
-        graph_crore = pynini.union(
+        graph_crores_component = pynini.union(
             graph_hundred_component_at_least_one_none_zero_digit + delete_space + pynutil.delete("करोड़"),
             pynutil.insert("00", weight=0.1)
         )
 
-        fst = graph_thousands
+        # fst = graph_thousands
         fst = pynini.union(
-            graph_crore
+            graph_crores_component
             + delete_space
-            + graph_lakhs
+            + graph_lakhs_component
             + delete_space
-            + graph_thousands
+            + graph_thousands_component
             + delete_space
             + graph_hundred_component,
             graph_zero,
         )
+
+        fst_crore = fst+graph_crore # handles words like चार हज़ार करोड़
+        fst_lakh = fst+graph_lakh # handles words like चार हज़ार लाख
+        fst = pynini.union(fst, fst_crore, fst_lakh)
 
         # inverse_order_fst = pynini.union(
         #     graph_hundred_component
