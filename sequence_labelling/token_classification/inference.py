@@ -56,7 +56,7 @@ def map_tokens_and_labels_to_word_and_punctuations(text):
 
 
 if __name__ == "__main__":
-    map_tokens_and_labels_to_word_and_punctuations("अमेरिका समेत अन्य देशों से जो मदद भारत पहुंची उसका क्या हुआ")
+    print(map_tokens_and_labels_to_word_and_punctuations("अमेरिका समेत अन्य देशों से जो मदद भारत पहुंची उसका क्या हुआ"))
 
 
 
