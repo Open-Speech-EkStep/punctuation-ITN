@@ -1,0 +1,691 @@
+Help on package pynini:
+
+NNAAMMEE
+    pynini
+
+PPAACCKKAAGGEE  CCOONNTTEENNTTSS
+    examples (package)
+    export (package)
+    lib (package)
+
+FFUUNNCCTTIIOONNSS
+    aacccceepp(...)
+        accep(astring, weight=None, arc_type=None, token_type=None)
+        
+        Creates an acceptor from a string.
+        
+        This function creates an FST which accepts its input with a fixed weight
+        (defaulting to semiring One).
+        
+        Args:
+          astring: The input string.
+          weight: A Weight or weight string indicating the desired path weight. If
+              omitted or null, the path weight is set to semiring One.
+          arc_type: An optional string indicating the arc type for the compiled FST.
+              This argument is silently ignored if istring and/or ostring is already
+              compiled.
+          token_type: An optional string indicating how the input string is to be
+              encoded as arc labels---one of: "utf8" (encodes the strings as UTF-8
+              encoded Unicode string), "byte" (encodes the string as raw bytes)---or
+              a SymbolTable to be used to encode the string. If not set, or set to
+              None, the value is set to the default token_type, which begins as
+              "byte", but can be overridden for regions of code using the
+              default_token_type context manager.
+        
+          Returns:
+            An FST.
+        
+          Raises:
+            FstArgError: Unknown arc type.
+            FstArgError: Unknown token type.
+            FstOpError: Operation failed.
+            FstStringCompilationError: String compilation failed.
+    
+    ccddrreewwrriittee(...)
+        cdrewrite(tau, l, r, sigstar, direction="ltr", mode="obl")
+        
+        Compiles a transducer expressing a context-dependent rewrite rule.
+        
+        This operation compiles a transducer representing a context-dependent
+        rewrite rule of the form
+        
+            a -> b / c __ d
+        
+        over a finite vocabulary.
+        
+        Args:
+          tau: A transducer representing a -> b.
+          l: An unweighted acceptor representing the left context.
+          r: An unweighted acceptor representing the right context.
+          sigstar: A cyclic, unweighted acceptor representing the closure over the
+              alphabet.
+          direction: A string specifying the direction of rule application; one of:
+              "ltr" (left-to-right application), "rtl" (right-to-left application),
+              or "sim" (simultaneous application).
+          mode: A string specifying the mode of rule application; one of: "obl"
+              (obligatory application), "opt" (optional application).
+        
+        Returns:
+          An FST.
+        
+        Raises:
+          FstArgError: Unknown cdrewrite direction type.
+          FstArgError: Unknown cdrewrite mode type.
+          FstOpError: Operation failed.
+    
+    ccoommppaacctt__ssyymmbbooll__ttaabbllee(...)
+        compact_symbol_table(symbols)
+        
+        Constructively relabels a SymbolTable to make it a contiguous mapping.
+        
+        Args:
+          symbols: Input SymbolTable.
+        
+        Returns:
+          A new compacted SymbolTable.
+    
+    ccoonnccaatt(...)
+        concat(fst1, fst2)
+        
+        Computes the concatenation (product) of two FSTs.
+        
+        This operation destructively concatenates the FST with other FSTs. If A
+        transduces string x to y with weight a and B transduces string w to v with
+        weight b, then their concatenation transduces string xw to yv with weight
+        a \otimes b.
+        
+        Args:
+          fst1: The first FST.
+          fst2: The second FST.
+        
+        Returns:
+          An FST.
+    
+    ccrroossss(...)
+        cross(fst1, fst2)
+        
+        Creates a cross-product transducer.
+        
+        This function creates an FST which transduces from the upper language
+        to the lower language.
+        
+        Args:
+          fst1: The input string, or an acceptor FST representing the upper
+              language.
+          fst2: The output string, or an acceptor FST representing the upper
+              language.
+        
+        Returns:
+          An FST.
+        
+        Raises:
+          FstOpError: Operation failed.
+    
+    ddiivviiddee(...)
+        divide(lhs, rhs)
+        
+        Computes the quotient of two Weights in the same semiring.
+        
+        This function computes lhs \oslash rhs, raising an exception if lhs and rhs
+        are not in the same semiring. As there is no way to specify whether to use
+        left vs. right division, this assumes a commutative semiring in which these
+        are equivalent operations.
+        
+        Args:
+           lhs: Left-hand side Weight.
+           rhs: Right-hand side Weight.
+        
+        Returns:
+          A Weight object.
+        
+        Raises:
+          FstArgError: Weight type not found (or not in same semiring).
+          FstBadWeightError: Invalid weight.
+    
+    eessccaappee(...)
+        escape(data)
+        
+        Escape all characters in a string that can be used to generate symbols.
+        
+        This function returns a new string which backslash-escapes the opening and
+        closing square bracket characters as well as backslashes to allow the passing
+        of arbitrary strings into Pynini functions without worrying about string
+        compilation errors.
+        
+        Args:
+          data: The input string.
+        
+        Returns:
+          An escaped string.
+    
+    ggeenneerraatteedd__ssyymmbboollss(...)
+        Returns a view of a symbol table containing generated symbols.
+    
+    lleenniieennttllyy__ccoommppoossee(...)
+        leniently_compose(mu, nu, sigstar, compose_filter="auto", connect=True)
+        
+        Constructively leniently-composes two FSTs.
+        
+        This operation computes the lenient composition of two FSTs. The lenient
+        composition of two FSTs is the priority union of their composition and the
+        left-hand side argument, where priority union is simply union in which the
+        left-hand side argument's relations have "priority" over the right-hand side
+        argument's relations.
+        
+        Args:
+          mu: The first input FST, taking higher priority.
+          nu: The second input FST, taking lower priority.
+          sigstar: A cyclic, unweighted acceptor representing the closure over the
+              alphabet.
+          compose_filter: A string matching a known composition filter; one of:
+              "alt_sequence", "auto", "match", "no_match", "null", "sequence",
+              "trivial".
+          connect: Should output be trimmed?
+        
+        Returns:
+          An FST.
+        
+        Raises:
+          FstOpError: Operation failed.
+    
+    mmeerrggee__ssyymmbbooll__ttaabbllee(...)
+        merge_symbol_table(lhs, rhs)
+        
+        Merges all symbols from the left table into the right.
+        
+        This function creates a new SymbolTable which is the merger of the two input
+        symbol Tables. Symbols in the right-hand table that conflict with those in the
+        left-hand table will be assigned values from the left-hand table. Thus the
+        returned table will never modify symbol assignments from the left-hand side,
+        but may do so on the right.
+        
+        If the left-hand table is associated with an FST, it may be necessary to
+        relabel it using the output table.
+        
+        Args:
+          lhs: Left-hand side SymbolTable.
+          rhs: Left-hand side SymbolTable.
+        
+        Returns:
+          A new merged SymbolTable.
+    
+    mmppddtt__ccoommppoossee(...)
+        mpdt_compose(fst1, fst2, parens, compose_filter="paren", left_mpdt=True)
+        
+        Composes a MPDT with an FST.
+        
+        This operation composes a MPDT with an FST. The input MPDT is defined by the
+        combination of an FST and a MPdtParentheses object specifying the stack
+        symbols and assignments. The caller should also specify whether the left-hand
+        or the right-hand FST argument is to be interpreted as a MPDT.
+        
+        Args:
+          fst1: The left-hand-side input FST or MPDT.
+          fst2: The right-hand-side input FST or MPDT.
+          parens: A MPdtParentheses object specifying the input MPDT's stack
+              operations and assignments.
+          compose_filter: A string indicating the desired MPDT composition filter; one
+              of: "paren" (keeps parentheses), "expand" (expands and removes
+              parentheses), "expand_paren" (expands and keeps parentheses).
+          left_mpdt: If true, the first argument is interpreted as a MPDT and the
+              second argument is interpreted as an FST; if false, the second
+              argument is interpreted as a MPDT and the first argument is interpreted
+              as an FST.
+        
+        Returns:
+          An FST.
+        
+        Raises:
+          FstOpError: Operation failed.
+    
+    mmppddtt__eexxppaanndd(...)
+        mpdt_expand(fst, parens, connect=True, keep_parentheses=False):
+        
+        Expands a bounded-stack MPDT to an FST.
+        
+        This operation converts a bounded-stack MPDT into the equivalent FST. The
+        input MPDT is defined by the combination of an FST and a MPdtParentheses
+        object specifying the MPDT stack symbols and assignments.
+        
+        If the input MPDT does not have a bounded stack, then it is impossible to
+        expand the MPDT into an FST and this operation will not terminate.
+        
+        Args:
+          fst: The FST component of the input MPDT.
+          parens: A MPdtParentheses object specifying the input PDT's stack
+              symbols and assignments.
+          connect: Should the output FST be trimmed?
+          keep_parentheses: Should the output FST preserve parentheses arcs?
+        
+        Returns:
+          An FST.
+        
+        Raises:
+          FstOpError: Operation failed.
+    
+    mmppddtt__rreevveerrssee(...)
+        mpdt_reverse(fst, parens)
+        
+        Reverses a MPDT.
+        
+        This operation reverses an MPDT. The input MPDT is defined by the combination
+        of an FST and a MPdtParentheses object specifying the MPDT stack symbols
+        and assignments. Unlike PDT reversal, which only modifies the FST component,
+        this operation also reverses the stack assignments. assignments.
+        
+        Args:
+          fst: The FST component of the input MPDT.
+          parens: A MPdtParentheses object specifying the input MPDT's stack symbols
+              and assignments.
+        
+        Returns:
+          A (Fst, MPdtParentheses) pair.
+    
+    ppddtt__ccoommppoossee(...)
+        pdt_compose(fst1, fst2, parens, compose_filter="paren", left_pdt=True)
+        
+        Composes a PDT with an FST.
+        
+        This operation composes a PDT with an FST. The input PDT is defined by the
+        combination of an FST and a PdtParentheses object specifying the stack
+        symbols. The caller should also specify whether the left-hand or the
+        right-hand FST argument is to be interpreted as a PDT.
+        
+        Args:
+          fst1: The left-hand-side input FST or PDT.
+          fst2: The right-hand-side input FST or PDT.
+          parens: A PdtParentheses object specifying the input PDT's stack symbols.
+          compose_filter: A string indicating the desired PDT composition filter; one
+              of: "paren" (keeps parentheses), "expand" (expands and removes
+              parentheses), "expand_paren" (expands and keeps parentheses).
+          left_pdt: If true, the first argument is interpreted as a PDT and the
+              second argument is interpreted as an FST; if false, the second
+              argument is interpreted as a PDT and the first argument is interpreted
+              as an FST.
+        
+        Returns:
+          The FST component of an PDT produced by composition.
+        
+        Raises:
+          FstOpError: Operation failed.
+    
+    ppddtt__eexxppaanndd(...)
+        pdt_expand(fst, parens, connect=True, keep_parentheses=False, weight=None)
+        
+        Expands a bounded-stack PDT to an FST.
+        
+        This operation converts a bounded-stack PDT into the equivalent FST. The
+        input PDT is defined by the combination of an FST and a PdtParentheses object
+        specifying the PDT stack symbols.
+        
+        If the input PDT does not have a bounded stack, then it is impossible to
+        expand the PDT into an FST and this operation will not terminate.
+        
+        Args:
+          fst: The FST component of the input PDT.
+          parens: A PdtParentheses object specifying the input PDT's stack symbols.
+          connect: Should the output FST be trimmed?
+          keep_parentheses: Should the output FST preserve parentheses arcs?
+          weight: A Weight or weight string indicating the desired weight threshold;
+              paths with weights below this threshold will be pruned. If omitted or
+              null, no paths are pruned.
+        
+        Returns:
+          An FST produced by expanding the bounded-stack PDT.
+        
+        Raises:
+          FstOpError: Operation failed.
+    
+    ppddtt__rreeppllaaccee(...)
+        pdt_replace(pairs, pdt_parser_type="left",
+                    int64 start_paren_labels=NO_LABEL,
+                    left_paren_prefix="(_",
+                    right_paren_prefix=")_")
+        
+        Constructively replaces arcs in an FST with other FST(s), producing a PDT.
+        
+        This operation performs the dynamic replacement of arcs in one FST with
+        another FST, allowing the definition of a PDT analogues to RTNs. The output
+        PDT, defined by the combination of an FST and a PdtParentheses object
+        specifying the PDT stack symbols, is the result of recursively replacing each
+        arc in an input FST that matches some "non-terminal" with a corresponding
+        FST, inserting parentheses where necessary. More precisely, an arc from
+        state s to state d with nonterminal output label n in an input FST is
+        replaced by redirecting this "call" arc to the initial state of a copy of the
+        replacement FST and then adding "return" arcs from each final state of the
+        replacement FST to d in the input FST. Unlike `replace`, this operation is
+        capable of handling cyclic dependencies among replacement rules, which is
+        accomplished by adding "push" stack symbols to "call" arcs and "pop" stack
+        symbols to "return" arcs.
+        
+        Args:
+          pairs: An iterable of (nonterminal label, FST) pairs, where the former is an
+              unsigned integer and the latter is an Fst instance.
+          pdt_parser_type: A string matching a known PdtParserType. One of: "left"
+              (default), "left_sr".
+          start_paren_labels: Index to use for the first inserted parentheses.
+          left_paren_prefix: Prefix to attach to SymbolTable labels for inserted left
+              parentheses.
+          right_paren_prefix: Prefix to attach to SymbolTable labels for inserted
+              right parentheses.
+        
+        Returns:
+         An (Fst, PdtParentheses) pair.
+        
+        Raises:
+          FstOpError: Operation failed.
+    
+    ppddtt__rreevveerrssee(...)
+        pdt_reverse(fst, parens)
+        
+        Reverses a PDT.
+        
+        This operation reverses an PDT. The input PDT is defined by the combination
+        of an FST and a PdtParentheses object specifying the PDT stack symbols.
+        
+        Args:
+          fst: The FST component of the input PDT.
+          parens: A PdtParentheses object specifying the input PDT's stack symbols.
+        
+        Returns:
+          An FST.
+    
+    ppddtt__sshhoorrtteessttppaatthh(...)
+        pdt_shortestpath(fst, parens, queue_type="fifo", keep_parentheses=False,
+                         path_gc=True)
+        
+        Computes the shortest path through a bounded-stack PDT.
+        
+        This operation computes the shortest path through a PDT. The input PDT is
+        defined by the combination of an FST and a PdtParentheses object specifying
+        the PDT stack symbols.
+        
+        Args:
+          fst: The FST component of an input PDT.
+          parens: A PdtParentheses object specifying the input PDT's stack symbols.
+          queue_type: A string matching a known queue type; one of: "fifo" (default),
+              "lifo", "state".
+          keep_parentheses: Should the output FST preserve parentheses arcs?
+          path_gc: Should shortest path data be garbage-collected?
+        
+        Returns:
+          An FST.
+        
+        Raises:
+          FstOpError: Operation failed.
+    
+    pplluuss(...)
+        plus(lhs, rhs)
+        
+        Computes the sum of two Weights in the same semiring.
+        
+        This function computes lhs \oplus rhs, raising an exception if lhs and rhs
+        are not in the same semiring.
+        
+        Args:
+           lhs: Left-hand side Weight.
+           rhs: Right-hand side Weight.
+        
+        Returns:
+          A Weight object.
+        
+        Raises:
+          FstArgError: Weight type not found (or not in same semiring).
+          FstBadWeightError: invalid weight.
+    
+    ppoowweerr(...)
+        power(lhs, rhs)
+        
+        Computes the iterated product of a weight.
+        
+        Args:
+           w: The weight.
+           n: The power.
+        
+        Returns:
+          A Weight object.
+        
+        Raises:
+          FstArgError: Weight type not found (or not in same semiring).
+          FstBadWeightError: Invalid weight.
+    
+    rreeppllaaccee(...)
+        replace(pairs, call_arc_labeling="input", return_arc_labeling="neither",
+                epsilon_on_replace=False, return_label=0)
+        
+        Recursively replaces arcs in the FST with other FST(s).
+        
+        This operation performs the dynamic replacement of arcs in one FST with
+        another FST, allowing the definition of FSTs analogous to RTNs. It takes as
+        input a set of pairs of a set of pairs formed by a non-terminal label and
+        its corresponding FST, and a label identifying the root FST in that set.
+        The resulting FST is obtained by taking the root FST and recursively replacing
+        each arc having a nonterminal as output label by its corresponding FST. More
+        precisely, an arc from state s to state d with (nonterminal) output label n in
+        this FST is replaced by redirecting this "call" arc to the initial state of a
+        copy F of the FST for n, and adding "return" arcs from each final state of F
+        to d. Optional arguments control how the call and return arcs are labeled; by
+        default, the only non-epsilon label is placed on the call arc.
+        
+        Args:
+          pairs: An iterable of (nonterminal label, FST) pairs, where the former is an
+              unsigned integer and the latter is an Fst instance.  
+          call_arc_labeling: A string indicating which call arc labels should be
+              non-epsilon. One of: "input" (default), "output", "both", "neither".
+              This value is set to "neither" if epsilon_on_replace is True.
+          return_arc_labeling: A string indicating which return arc labels should be
+              non-epsilon. One of: "input", "output", "both", "neither" (default).
+              This value is set to "neither" if epsilon_on_replace is True.
+          epsilon_on_replace: Should call and return arcs be epsilon arcs? If True,
+              this effectively overrides call_arc_labeling and return_arc_labeling,
+              setting both to "neither".
+          return_label: The integer label for return arcs.
+        
+        Returns:
+          An FST.
+    
+    ssttrriinngg__ffiillee(...)
+        string_file(filename, arc_type="standard",
+                    input_token_type=None, output_token_type=None)
+        
+        Creates a transducer that maps between elements of mappings read from
+        a tab-delimited file.
+        
+        The first column is interpreted as the input string to a transduction.
+        
+        The second column, separated from the first by a single tab character, is
+        interpreted as the output string for the transduction; an acceptor can be
+        modeled by using identical first and second columns.
+        
+        An optional third column, separated from the second by a single tab character,
+        is interpreted as a weight for the transduction; if not specified the weight
+        defaults to semiring One. Note that weights are never permitted in the second
+        column.
+        
+        The comment character is #, and has scope until the end of the line. Any
+        preceding whitespace before a comment is ignored. To use the '#' literal
+        (i.e., to ensure it is not interpreted as the start of a comment) escape it
+        with \; the escaping \ in the string "\#" also ignored.
+        
+        Args:
+          filename: The path to a TSV file formatted as described above.
+          arc_type: A string indicating the arc type.
+          input_token_type: An optional string indicating how the input strings are
+              to be encoded as arc labels---one of: "utf8" (encodes strings as a UTF-8
+              encoded Unicode strings), "byte" (encodes strings as raw bytes)---or a
+              SymbolTable. If not set, or set to None, the value is set to the
+              default token_type, which begins as "byte", but can be overridden for
+              regions of code using the default_token_type context manager.
+          output_token_type: An optional string indicating how the output strings are
+              to be encoded as arc labels---one of: "utf8" (encodes strings as a UTF-8
+              encoded Unicode strings), "byte" (encodes strings as raw bytes)---or a
+              SymbolTable. If not set, or set to None, the value is set to the
+              default token_type, which begins as "byte", but can be overridden for
+              regions of code using the default_token_type context manager.
+        
+        Returns:
+          An FST.
+        
+        Raises:
+          FstIOError: Read failed.
+    
+    ssttrriinngg__mmaapp(...)
+        string_map(lines, arc_type="standard",
+                   input_token_type=None, output_token_type=None)
+        
+        Creates an acceptor or cross-product transducer that maps between
+        elements of mappings read from an iterable.
+        
+        Args:
+          lines: An iterable of iterables of size one, two, or three, or an iterable
+              of strings. The first element in each indexable (or each string, if the
+              input is an iterable of strings) is interpreted as the input string,
+              the second (optional) as the output string, defaulting to the input
+              string, and the third (optional) as a string to be parsed as a weight,
+              defaulting to semiring One.
+          arc_type: A string indicating the arc type.
+          input_token_type: An optional string indicating how the input strings are to
+              be encoded as arc labels---one of: "utf8" (encodes strings as a UTF-8
+              encoded Unicode strings), "byte" (encodes strings as raw bytes)---or a
+              SymbolTable. If not set, or set to None, the value is set to the
+              default token_type, which begins as "byte", but can be overridden for
+              regions of code using the default_token_type context manager.
+          output_token_type: An optional string indicating how the output strings are
+              to be encoded as arc labels---one of: "utf8" (encodes strings as a UTF-8
+              encoded Unicode strings), "byte" (encodes strings as raw bytes)---or a
+              SymbolTable. If not set, or set to None, the value is set to the
+              default token_type, which begins as "byte", but can be overridden for
+              regions of code using the default_token_type context manager.
+        
+        Returns:
+          An FST.
+        
+        Raises:
+          FstArgError: String map compilation failed.
+    
+    ttiimmeess(...)
+        times(lhs, rhs)
+        
+        Computes the product of two Weights in the same semiring.
+        
+        This function computes lhs \otimes rhs, raising an exception if lhs and rhs
+        are not in the same semiring.
+        
+        Args:
+           lhs: Left-hand side Weight.
+           rhs: Right-hand side Weight.
+        
+        Returns:
+          A Weight object.
+        
+        Raises:
+          FstArgError: Weight type not found (or not in same semiring).
+          FstBadWeightError: Invalid weight.
+    
+    uunniioonn(...)
+        union(*fsts)
+        
+        Computes the union (sum) of two or more FSTs.
+        
+        This operation computes the union (sum) of two FSTs. If A transduces string
+        x to y with weight a and B transduces string w to v with weight b, then their
+        union transduces x to y with weight a and w to v with weight b.
+        
+        Args:
+         *fsts: Two or more input FSTs.
+        
+        Returns:
+          An FST.
+
+DDAATTAA
+    AACCCCEEPPTTOORR = <FstProperties.ACCEPTOR: 65536>
+    AACCCCEESSSSIIBBLLEE = <FstProperties.ACCESSIBLE: 1099511627776>
+    AACCYYCCLLIICC = <FstProperties.ACYCLIC: 34359738368>
+    AADDDD__AARRCC__PPRROOPPEERRTTIIEESS = <FstProperties.ADD_ARC_PROPERTIES: 76509027631111...
+    AADDDD__SSTTAATTEE__PPRROOPPEERRTTIIEESS = <FstProperties.ADD_STATE_PROPERTIES: 2583852324...
+    AADDDD__SSUUPPEERRFFIINNAALL__PPRROOPPEERRTTIIEESS = <FstProperties.ADD_SUPERFINAL_PROPERTIES: ...
+    AARRCC__FFLLAAGGSS = 31
+    AARRCC__II__LLAABBEELL__VVAALLUUEE = 1
+    AARRCC__NNEEXXTT__SSTTAATTEE__VVAALLUUEE = 8
+    AARRCC__NNOO__CCAACCHHEE = 16
+    AARRCC__OO__LLAABBEELL__VVAALLUUEE = 2
+    AARRCC__SSOORRTT__PPRROOPPEERRTTIIEESS = <FstProperties.ARC_SORT_PROPERTIES: 281470950113...
+    AARRCC__VVAALLUUEE__FFLLAAGGSS = 15
+    AARRCC__WWEEIIGGHHTT__VVAALLUUEE = 4
+    AArrccMMaappTTyyppee = 'typing.Literal["identity", "input_epsilon", "inv...     ...
+    BBIINNAARRYY__PPRROOPPEERRTTIIEESS = <FstProperties.SET_ARC_PROPERTIES: 7>
+    CCDDRReewwrriitteeDDiirreeccttiioonn = 'typing.Literal["ltr", "rtl", "sim"]'
+    CCDDRReewwrriitteeMMooddee = 'typing.Literal["obl", "opt"]'
+    CCOOAACCCCEESSSSIIBBLLEE = <FstProperties.COACCESSIBLE: 4398046511104>
+    CCOOPPYY__PPRROOPPEERRTTIIEESS = <FstProperties.COPY_PROPERTIES: 281474976645124>
+    CCYYCCLLIICC = <FstProperties.CYCLIC: 17179869184>
+    CCoommppoosseeFFiilltteerr = 'typing.Literal["alt_sequence", "auto", "match", ...  ...
+    DDEELLEETTEE__AARRCC__PPRROOPPEERRTTIIEESS = <FstProperties.DELETE_ARC_PROPERTIES: 15218939...
+    DDEELLEETTEE__SSTTAATTEE__PPRROOPPEERRTTIIEESS = <FstProperties.DELETE_STATE_PROPERTIES: 1411...
+    DDeetteerrmmiinniizzeeTTyyppee = 'typing.Literal["functional", "nonfunctional",\n    ...
+    EENNCCOODDEE__FFLLAAGGSS = 3
+    EENNCCOODDEE__LLAABBEELLSS = 1
+    EENNCCOODDEE__WWEEIIGGHHTTSS = 2
+    EEPPSSIILLOONNSS = <FstProperties.EPSILONS: 4194304>
+    EERRRROORR = <FstProperties.ERROR: 4>
+    EEXXPPAANNDDEEDD = <FstProperties.EXPANDED: 1>
+    EEXXTTRRIINNSSIICC__PPRROOPPEERRTTIIEESS = <FstProperties.ERROR: 4>
+    FFSSTT__PPRROOPPEERRTTIIEESS = <FstProperties.FST_PROPERTIES: 281474976645127>
+    FFaarrFFiilleeMMooddee = 'typing.Literal["r", "w"]'
+    FFaarrTTyyppee = 'typing.Literal[\n  "fst",\n  "stlist",\n  "sttable",\n  "de...
+    FFssttLLiikkee = 'typing.Union[Fst, str]'
+    IINNIITTIIAALL__AACCYYCCLLIICC = <FstProperties.INITIAL_ACYCLIC: 137438953472>
+    IINNIITTIIAALL__CCYYCCLLIICC = <FstProperties.INITIAL_CYCLIC: 68719476736>
+    IINNTTRRIINNSSIICC__PPRROOPPEERRTTIIEESS = <FstProperties.INTRINSIC_PROPERTIES: 2814749766...
+    II__DDEETTEERRMMIINNIISSTTIICC = <FstProperties.I_DETERMINISTIC: 262144>
+    II__EEPPSSIILLOONNSS = <FstProperties.I_EPSILONS: 16777216>
+    II__LLAABBEELL__IINNVVAARRIIAANNTT__PPRROOPPEERRTTIIEESS = <FstProperties.I_LABEL_INVARIANT_PROPER...
+    II__LLAABBEELL__SSOORRTTEEDD = <FstProperties.I_LABEL_SORTED: 268435456>
+    MMUUTTAABBLLEE = <FstProperties.MUTABLE: 2>
+    NNEEGG__TTRRIINNAARRYY__PPRROOPPEERRTTIIEESS = <FstProperties.NEG_TRINARY_PROPERTIES: 187649...
+    NNOONN__II__DDEETTEERRMMIINNIISSTTIICC = <FstProperties.NON_I_DETERMINISTIC: 524288>
+    NNOONN__OO__DDEETTEERRMMIINNIISSTTIICC = <FstProperties.NON_O_DETERMINISTIC: 2097152>
+    NNOOTT__AACCCCEEPPTTOORR = <FstProperties.NOT_ACCEPTOR: 131072>
+    NNOOTT__AACCCCEESSSSIIBBLLEE = <FstProperties.NOT_ACCESSIBLE: 2199023255552>
+    NNOOTT__CCOOAACCCCEESSSSIIBBLLEE = <FstProperties.NOT_COACCESSIBLE: 8796093022208>
+    NNOOTT__II__LLAABBEELL__SSOORRTTEEDD = <FstProperties.NOT_I_LABEL_SORTED: 536870912>
+    NNOOTT__OO__LLAABBEELL__SSOORRTTEEDD = <FstProperties.NOT_O_LABEL_SORTED: 2147483648>
+    NNOOTT__SSTTRRIINNGG = <FstProperties.NOT_STRING: 35184372088832>
+    NNOOTT__TTOOPP__SSOORRTTEEDD = <FstProperties.NOT_TOP_SORTED: 549755813888>
+    NNOO__EEPPSSIILLOONNSS = <FstProperties.NO_EPSILONS: 8388608>
+    NNOO__II__EEPPSSIILLOONNSS = <FstProperties.NO_I_EPSILONS: 33554432>
+    NNOO__LLAABBEELL = -1
+    NNOO__OO__EEPPSSIILLOONNSS = <FstProperties.NO_O_EPSILONS: 134217728>
+    NNOO__SSTTAATTEE__IIDD = -1
+    NNOO__SSYYMMBBOOLL = -1
+    NNUULLLL__PPRROOPPEERRTTIIEESS = <FstProperties.NULL_PROPERTIES: 164284018786304>
+    OO__DDEETTEERRMMIINNIISSTTIICC = <FstProperties.O_DETERMINISTIC: 1048576>
+    OO__EEPPSSIILLOONNSS = <FstProperties.O_EPSILONS: 67108864>
+    OO__LLAABBEELL__IINNVVAARRIIAANNTT__PPRROOPPEERRTTIIEESS = <FstProperties.O_LABEL_INVARIANT_PROPER...
+    OO__LLAABBEELL__SSOORRTTEEDD = <FstProperties.O_LABEL_SORTED: 1073741824>
+    PPOOSS__TTRRIINNAARRYY__PPRROOPPEERRTTIIEESS = <FstProperties.POS_TRINARY_PROPERTIES: 938249...
+    PPrroojjeeccttTTyyppee = 'typing.Literal["input", "output"]'
+    QQuueeuueeTTyyppee = 'typing.Literal["auto", "fifo", "lifo", "shortest", "state...
+    RRMM__SSUUPPEERRFFIINNAALL__PPRROOPPEERRTTIIEESS = <FstProperties.RM_SUPERFINAL_PROPERTIES: 24...
+    RRaannddAArrccSSeelleeccttiioonn = 'typing.Literal["uniform", "log_prob", "fast_log_pr...
+    RReeppllaacceeLLaabbeellTTyyppee = 'typing.Literal["neither", "input", "output", "both...
+    SSEETT__AARRCC__PPRROOPPEERRTTIIEESS = <FstProperties.SET_ARC_PROPERTIES: 7>
+    SSEETT__FFIINNAALL__PPRROOPPEERRTTIIEESS = <FstProperties.SET_FINAL_PROPERTIES: 2154913940...
+    SSEETT__SSTTAARRTT__PPRROOPPEERRTTIIEESS = <FstProperties.SET_START_PROPERTIES: 2251937251...
+    SSTTAATTEE__SSOORRTT__PPRROOPPEERRTTIIEESS = <FstProperties.STATE_SORT_PROPERTIES: 22787378...
+    SSTTRRIINNGG = <FstProperties.STRING: 17592186044416>
+    SSoorrttTTyyppee = 'typing.Literal["ilabel", "olabel"]'
+    SSttaatteeMMaappTTyyppee = 'typing.Literal["arc_sum", "arc_unique", "identity"]'
+    TTOOPP__SSOORRTTEEDD = <FstProperties.TOP_SORTED: 274877906944>
+    TTRRIINNAARRYY__PPRROOPPEERRTTIIEESS = <FstProperties.TRINARY_PROPERTIES: 28147497664512...
+    TTookkeennTTyyppee = 'typing.Union[SymbolTableView, typing.Literal["byte", "utf...
+    UUNNWWEEIIGGHHTTEEDD = <FstProperties.UNWEIGHTED: 8589934592>
+    UUNNWWEEIIGGHHTTEEDD__CCYYCCLLEESS = <FstProperties.UNWEIGHTED_CYCLES: 140737488355328>
+    WWEEIIGGHHTTEEDD = <FstProperties.WEIGHTED: 4294967296>
+    WWEEIIGGHHTTEEDD__CCYYCCLLEESS = <FstProperties.WEIGHTED_CYCLES: 70368744177664>
+    WWEEIIGGHHTT__IINNVVAARRIIAANNTT__PPRROOPPEERRTTIIEESS = <FstProperties.WEIGHT_INVARIANT_PROPERTI...
+    WWeeiigghhttLLiikkee = 'typing.Union[Weight, typing.Union[str, int, float]]'
+
+FFIILLEE
+    /home/soma/anaconda3/envs/en-tn/lib/python3.8/site-packages/pynini/__init__.py
+
