@@ -51,8 +51,8 @@ class TimeFst(GraphFst):
         super().__init__(name="time", kind="classify")
         # hours, minutes, seconds, suffix, zone, style, speak_period
 
-        suffix_graph = pynini.string_file(lang_data_path+"time_suffix.tsv")
-        time_zone_graph = pynini.invert(pynini.string_file(lang_data_path+"time_zone.tsv"))
+        suffix_graph = pynini.string_file(get_abs_path(lang_data_path+"time_suffix.tsv"))
+        time_zone_graph = pynini.invert(pynini.string_file(get_abs_path(lang_data_path+"time_zone.tsv")))
 
         # only used for < 1000 thousand -> 0 weight
         cardinal = pynutil.add_weight(CardinalFst().graph_no_exception, weight=-0.7)

@@ -17,7 +17,7 @@ import os
 import string
 from pathlib import Path
 from lang_params import LANG
-lang_data_path = f'./data/{LANG}_data/'
+lang_data_path = f'data/{LANG}_data/'
 try:
     import pynini
     from data_loader_utils import get_abs_path
@@ -48,7 +48,7 @@ try:
     insert_space = pynutil.insert(" ")
     delete_extra_space = pynini.cross(pynini.closure(NEMO_WHITE_SPACE, 1), " ")
 
-    suppletive = pynini.string_file(lang_data_path+"/suppletive.tsv")
+    suppletive = pynini.string_file(get_abs_path(lang_data_path+"/suppletive.tsv"))
     # _v = pynini.union("a", "e", "i", "o", "u")
     _c = pynini.union(
         "b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "y", "z"
