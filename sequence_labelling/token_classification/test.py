@@ -1,5 +1,5 @@
 import json
-
+import torch.nn as nn
 import test_params
 from dataset_loader import PunctuationDataset
 import torch
@@ -16,7 +16,7 @@ label_encoder_path = '/'.join(test_params.TEST_DATA.split('/')[:-1]) + '/label_e
 with open(label_encoder_path) as label_encoder:
     train_encoder = json.load(label_encoder)
 
-tag_values = ['none ', 'none', 'exclamation', 'comma', 'viram', 'PAD']
+tag_values = ['hyp', 'qm', 'comma', 'end', 'blank', 'ex', 'PAD']
 
 test_sentences, test_labels, _, _ = process_data(test_params.TEST_DATA)
 
@@ -28,6 +28,10 @@ model = AlbertForTokenClassification.from_pretrained('ai4bharat/indic-bert',
                                                      num_labels=len(train_encoder),
                                                      output_attentions=False,
                                                      output_hidden_states=False)
+
+if torch.cuda.device_count() > 1:
+    print("Using ", torch.cuda.device_count(), "GPUs")
+    model = nn.DataParallel(model)
 
 checkpoint = torch.load(test_params.CHECKPOINT_PATH)
 model.load_state_dict(checkpoint['state_dict'])
@@ -69,5 +73,5 @@ val_accuracy = accuracy_score(pred_tags, valid_tags)
 val_f1_score = f1_score(pred_tags, valid_tags, average='macro')
 print("Validation Accuracy: {}".format(val_accuracy))
 print("Validation F1-Score: {}".format(val_f1_score))
-print("Classification Report: {}".format(classification_report(pred_tags, valid_tags,
+print("Classification Report: \n  {}".format(classification_report(pred_tags, valid_tags,
                                                                labels=np.unique(pred_tags))))
