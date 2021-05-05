@@ -34,6 +34,8 @@ try:
 except (ModuleNotFoundError, ImportError):
     PYNINI_AVAILABLE = False
 
+from lang_params import LANG
+data_path = f'data/{LANG}_data/'
 
 class CardinalFst(GraphFst):
     """
@@ -53,7 +55,7 @@ class CardinalFst(GraphFst):
         NEMO_NOT_SPACE = pynini.difference(NEMO_CHAR, NEMO_WHITE_SPACE).optimize()
         # NEMO_NON_BREAKING_SPACE = u"\u00A0"
 
-        hindi_digit_file = './data/numbers/digit.tsv'
+        hindi_digit_file = data_path + 'numbers/digit.tsv'
         with open(hindi_digit_file) as f:
             digits = f.readlines()
         hindi_digits = ''.join([line.split()[-1] for line in digits])
@@ -62,9 +64,9 @@ class CardinalFst(GraphFst):
         HINDI_DIGIT = pynini.union(*hindi_digits).optimize()
         HINDI_DIGIT_WITH_ZERO = pynini.union(*hindi_digits_with_zero).optimize()
 
-        graph_zero = pynini.string_file("./data/numbers/zero.tsv")
-        graph_tens = pynini.string_file("./data/numbers/hindi_tens_en.tsv")
-        graph_digit = pynini.string_file("./data/numbers/digit.tsv")
+        graph_zero = pynini.string_file(data_path + "numbers/zero.tsv")
+        graph_tens = pynini.string_file(data_path + "numbers/hindi_tens_en.tsv")
+        graph_digit = pynini.string_file(data_path + "numbers/digit.tsv")
 
         graph_hundred = pynini.cross("सौ", "")
         graph_crore = pynini.cross("करोड़", "0000000")

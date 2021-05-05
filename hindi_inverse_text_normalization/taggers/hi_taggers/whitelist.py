@@ -23,6 +23,8 @@ try:
 except (ModuleNotFoundError, ImportError):
     PYNINI_AVAILABLE = False
 
+from lang_params import LANG
+lang_data_path = f'data/{LANG}_data/'
 
 class WhiteListFst(GraphFst):
     """
@@ -34,6 +36,6 @@ class WhiteListFst(GraphFst):
     def __init__(self):
         super().__init__(name="whitelist", kind="classify")
 
-        whitelist = pynini.string_file(get_abs_path("data/whitelist.tsv")).invert()
+        whitelist = pynini.string_file(lang_data_path+"whitelist.tsv").invert()
         graph = pynutil.insert("name: \"") + convert_space(whitelist) + pynutil.insert("\"")
         self.fst = graph.optimize()

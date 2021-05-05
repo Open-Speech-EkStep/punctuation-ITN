@@ -28,6 +28,8 @@ try:
 except (ModuleNotFoundError, ImportError):
     PYNINI_AVAILABLE = False
 
+from lang_params import LANG
+data_path = f'data/{LANG}_data/'
 
 def get_quantity(deci, cardinal_graph_hundred_component_at_least_one_none_zero_digit):
     numbers = cardinal_graph_hundred_component_at_least_one_none_zero_digit @ (
@@ -46,7 +48,6 @@ def get_quantity(deci, cardinal_graph_hundred_component_at_least_one_none_zero_d
     res |= deci + delete_extra_space + pynutil.insert("quantity: \"") + (suffix | "thousand") + pynutil.insert("\"")
     return res
 
-
 class DecimalFst(GraphFst):
     """
     Finite state transducer for classifying decimal, 
@@ -64,8 +65,8 @@ class DecimalFst(GraphFst):
             cardinal.graph_hundred_component_at_least_one_none_zero_digit
         )
 
-        graph_decimal = pynini.string_file(get_abs_path("data/numbers/digit.tsv"))
-        graph_decimal |= pynini.string_file(get_abs_path("data/numbers/zero.tsv")) | pynini.cross("शून्य", "0")
+        graph_decimal = pynini.string_file(get_abs_path(data_path+"numbers/digit.tsv"))
+        graph_decimal |= pynini.string_file(get_abs_path(data_path +"numbers/zero.tsv")) | pynini.cross("शून्य", "0")
 
         graph_decimal = pynini.closure(graph_decimal + delete_space) + graph_decimal
         self.graph = graph_decimal

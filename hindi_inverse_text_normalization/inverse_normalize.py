@@ -16,8 +16,10 @@ import itertools
 import sys
 from collections import OrderedDict
 from typing import List
+from lang_params import LANG
+lang_taggers = f'taggers.{LANG}_taggers'
 
-from taggers.tokenize_and_classify_final import ClassifyFinalFst
+exec(f"from {lang_taggers}.tokenize_and_classify_final import ClassifyFinalFst")
 from token_parser import PRESERVE_ORDER_KEY, TokenParser
 from verbalizers.verbalize_final import VerbalizeFinalFst
 from tqdm import tqdm

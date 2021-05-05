@@ -15,6 +15,9 @@
 from data_loader_utils import get_abs_path
 from graph_utils import NEMO_NOT_SPACE, GraphFst, convert_space
 
+from lang_params import LANG
+lang_data_path = f'data/{LANG}_data/'
+
 try:
     import pynini
     from pynini.lib import pynutil
@@ -33,7 +36,7 @@ class WordFst(GraphFst):
     def __init__(self):
         super().__init__(name="word", kind="classify")
 
-        exceptions = pynini.string_file(get_abs_path("data/sentence_boundary_exceptions.txt"))
+        exceptions = pynini.string_file(get_abs_path(lang_data_path+"sentence_boundary_exceptions.txt"))
         word = (
             pynutil.insert("name: \"")
             + (pynini.closure(pynutil.add_weight(NEMO_NOT_SPACE, weight=0.1), 1) | convert_space(exceptions))

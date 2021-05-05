@@ -59,6 +59,7 @@ def parse_args():
     parser.add_argument("--verbose", help="print denormalization info. For debugging", action='store_true')
     parser.add_argument("--inverse_normalizer", default='nemo', type=str)
     parser.add_argument("--output", help="output file path", required=False, type=str)
+    parser.add_argument("--lang", help="language", required=False, type=str)
 
     return parser.parse_args()
 
@@ -89,6 +90,7 @@ def indian_format(word, hindi_digits_with_zero):
 if __name__ == "__main__":
     args = parse_args()
     file_path = args.input
+
     inverse_normalizer = INVERSE_NORMALIZERS[args.inverse_normalizer]
 
     print("Loading data: " + file_path)

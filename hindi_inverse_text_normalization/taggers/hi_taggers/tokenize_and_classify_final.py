@@ -11,10 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from lang_params import LANG
+
+lang_taggers = f'taggers.{LANG}_taggers'
 
 from graph_utils import GraphFst, delete_extra_space, delete_space
-from taggers.punctuation import PunctuationFst
-from taggers.tokenize_and_classify import ClassifyFst
+exec(f"from {lang_taggers}.punctuation import PunctuationFst")
+exec(f"from {lang_taggers}.tokenize_and_classify import ClassifyFst")
 
 try:
     import pynini

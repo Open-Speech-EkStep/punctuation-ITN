@@ -20,13 +20,16 @@ from graph_utils import (
     delete_space,
 )
 
+from lang_params import LANG
+lang_data_path = f'data/{LANG}_data/'
+
 try:
     import pynini
     from pynini.lib import pynutil
 
-    graph_teen = pynini.string_file(get_abs_path("data/numbers/teen.tsv")).optimize()
-    graph_digit = pynini.string_file(get_abs_path("data/numbers/digit.tsv")).optimize()
-    ties_graph = pynini.string_file(get_abs_path("data/numbers/ties.tsv")).optimize()
+    graph_teen = pynini.string_file(lang_data_path + "numbers/teen.tsv").optimize()
+    graph_digit = pynini.string_file(lang_data_path + "numbers/digit.tsv").optimize()
+    ties_graph = pynini.string_file(lang_data_path + "numbers/ties.tsv").optimize()
 
     PYNINI_AVAILABLE = True
 except (ModuleNotFoundError, ImportError):
@@ -39,7 +42,7 @@ except (ModuleNotFoundError, ImportError):
 
 
 def _get_month_graph():
-    month_graph = pynini.string_file(get_abs_path("data/months.tsv"))
+    month_graph = pynini.string_file(lang_data_path + "months.tsv")
     month_graph = pynini.invert(month_graph).optimize()
     return month_graph
 

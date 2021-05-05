@@ -11,17 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from lang_params import LANG
+
+lang_taggers = f'taggers.{LANG}_taggers'
 
 from graph_utils import GraphFst
-from taggers.cardinal import CardinalFst
-from taggers.date import DateFst
-from taggers.decimal import DecimalFst
-from taggers.measure import MeasureFst
-from taggers.money import MoneyFst
-from taggers.ordinal import OrdinalFst
-from taggers.time import TimeFst
-from taggers.whitelist import WhiteListFst
-from taggers.word import WordFst
+exec(f"from {lang_taggers}.cardinal import CardinalFst")
+exec(f"from {lang_taggers}.date import DateFst")
+exec(f"from {lang_taggers}.decimal import DecimalFst")
+exec(f"from {lang_taggers}.measure import MeasureFst")
+exec(f"from {lang_taggers}.money import MoneyFst")
+exec(f"from {lang_taggers}.ordinal import OrdinalFst")
+exec(f"from {lang_taggers}.time import TimeFst")
+exec(f"from {lang_taggers}.whitelist import WhiteListFst")
+exec(f"from {lang_taggers}.word import WordFst")
 
 try:
     from pynini.lib import pynutil
