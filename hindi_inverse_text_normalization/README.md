@@ -1,4 +1,4 @@
-Text denormalization system for Indic Languages, e.g. `चार सौ आट्ठारह` -> `418` 
+Text denormalization system for Indic Languages, e.g. `चार सौ आट्ठारह` -> `418` <br>
 Currently supports Hindi.
 
 Installation:
