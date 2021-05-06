@@ -4,6 +4,7 @@ import numpy as np
 import inference_params
 import json
 import torch.nn as nn
+from indicnlp.tokenize import indic_tokenize
 
 label_encoder_path = inference_params.LABEL_ENCODER_PATH
 punctuation_dict = {'hyp': '-', 'qm': '? ', 'comma': ', ', 'end': '। ', 'blank': ' ', 'ex': '! '}
@@ -50,8 +51,15 @@ def map_tokens_and_labels_to_word_and_punctuations(text):
                     break
             new_tokens.append(current_word)
     full_text = ''
-    for word, punctuation in zip(text, new_labels):
-        full_text = full_text + word + punctuation_dict[punctuation]
+    tokenized_text = indic_tokenize.trivial_tokenize_indic(text)
+    
+    if len(tokenized_text) == len(new_labels):
+        full_text_tokens = tokenized_text
+    else:
+        full_text_tokens = new_tokens
+        
+    for word, punctuation in zip(full_text_tokens, new_labels):
+            full_text = full_text + word + punctuation_dict[punctuation]
     return full_text
 
 
