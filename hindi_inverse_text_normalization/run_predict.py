@@ -65,14 +65,24 @@ def parse_args():
 
 
 def remove_starting_zeros(word, hindi_digits_with_zero):
+    currency_handled = ['$', '₹']
+    currency = ''
+    if word[0] in currency_handled:
+        currency = word[0]
+        word = word[1:]
+
     if word[0] in hindi_digits_with_zero and len(word) > 1:
         if all([digit=="0" for digit in list(word)]):
             return "1"+word
+        if '.' in word:
+            if len(word.split('.')[0]) == 1:
+                return word
         pos_non_zero_nums = [pos for pos, word in enumerate(list(word)) if word != "0"]
         # print(pos_non_zero_nums, word)
         first_non_zero_num = min(pos_non_zero_nums)
         word = word[first_non_zero_num:]
-
+    if currency:
+        word = currency+' '+word
     return word
 
 
@@ -82,7 +92,8 @@ def indian_format(word, hindi_digits_with_zero):
         # getting [num_before_decimal_point, decimal_point, num_after_decimal_point]
         r = ",".join([s[x - 2:x] for x in range(-3, -len(s), -2)][::-1] + [s[-3:]])
         # adding commas after every 2 digits after the last 3 digits
-        return "".join([r] + d)  # joining decimal points as is
+        word = "".join([r] + d)  # joining decimal points as is
+        return word
     else:
         return word
 
@@ -116,8 +127,6 @@ if __name__ == "__main__":
     inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
     print(inverse_normalizer_prediction)
     for sent in inverse_normalizer_prediction:
-        if "करोड" in sent:
-            sent = sent.replace("करोड", "करोड़")
         trimmed_sent = ' '.join([remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
         astr_list.append(trimmed_sent)
         comma_sep_num_list.append(
@@ -128,5 +137,5 @@ if __name__ == "__main__":
     print('-' * 100)
     print('Indian Format nums output')
     print(comma_sep_num_list)
-    # write_file(args.output, inverse_normalizer_prediction)
+    write_file(args.output, comma_sep_num_list)
     # print(f"- Normalized. Writing out to {args.output}")
