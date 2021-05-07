@@ -42,8 +42,8 @@ class HindiInverseTextNormalization(unittest.TestCase):
 
     def test_thousands_are_converted_to_unformatted_numerals(self):
         # no formatting in indian format for this test
-        data = ['एक हज़ार चार सौ बीस', 'बारह हज़ार सात सौ तीन', 'पंद्रह सौ', 'पंद्रह सौ सात']
-        expected_output = ['1420', '12703', '1500', '1507']
+        data = ['एक हज़ार चार सौ बीस', 'बारह हज़ार सात सौ तीन', 'पंद्रह सौ', 'पंद्रह सौ सात', 'पंद्रह सौ']
+        expected_output = ['1420', '12703', '1500', '1507', '1500']
 
         inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
 
@@ -116,6 +116,134 @@ class HindiInverseTextNormalization(unittest.TestCase):
         # TODO: don't format (comma) for years
         data = ['वर्ष उन्निस सौ चौहत्तर', 'लेखों की संख्या एक हज़ार नौ सौ चौहत्तर हैं।']
         expected_output = ['वर्ष 1,974', 'लेखों की संख्या 1,974 हैं।']
+
+        inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
+
+        astr_list = []
+        comma_sep_num_list = []
+        inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
+        for sent in inverse_normalizer_prediction:
+            trimmed_sent = ' '.join(
+                [remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
+            astr_list.append(trimmed_sent)
+            comma_sep_num_list.append(
+                ' '.join([indian_format(word, hindi_digits_with_zero) for word in trimmed_sent.split(' ')]))
+
+        self.assertEqual(expected_output, comma_sep_num_list)
+
+    def test_variations_of_hundreds_and_thousands_of_crores_or_lakhs_are_converted(self):
+
+        data = ['चार हज़ार चार सौ करोड़', 'दो सौ करोड़', 'चौबीस हज़ार करोड़', 'चार हज़ार चार सौ लाख']
+        expected_output = ['44,00,00,00,000', '2,00,00,00,000', '2,40,00,00,00,000', '44,00,00,000']
+
+        inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
+
+        astr_list = []
+        comma_sep_num_list = []
+        inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
+        for sent in inverse_normalizer_prediction:
+            trimmed_sent = ' '.join(
+                [remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
+            astr_list.append(trimmed_sent)
+            comma_sep_num_list.append(
+                ' '.join([indian_format(word, hindi_digits_with_zero) for word in trimmed_sent.split(' ')]))
+
+        self.assertEqual(expected_output, comma_sep_num_list)
+
+    def test_spoken_variations_of_hundreds_and_thousands_of_crores_or_lakhs_are_converted(self):
+
+        data = ['उन्निस सौ उन्निस करोड़', 'सत्ताईस सौ करोड़', 'छत्तीस सौ लाख']
+        expected_output = ['19,19,00,00,000', '27,00,00,00,000', '36,00,00,000']
+
+        inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
+
+        astr_list = []
+        comma_sep_num_list = []
+        inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
+        for sent in inverse_normalizer_prediction:
+            trimmed_sent = ' '.join(
+                [remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
+            astr_list.append(trimmed_sent)
+            comma_sep_num_list.append(
+                ' '.join([indian_format(word, hindi_digits_with_zero) for word in trimmed_sent.split(' ')]))
+
+        self.assertEqual(expected_output, comma_sep_num_list)
+
+    def test_simple_lakhs_of_crores_are_converted(self):
+        data = ['चार लाख करोड़़']
+        expected_output = ['4,00,000 करोड़़']
+
+        inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
+
+        astr_list = []
+        comma_sep_num_list = []
+        inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
+        for sent in inverse_normalizer_prediction:
+            trimmed_sent = ' '.join(
+                [remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
+            astr_list.append(trimmed_sent)
+            comma_sep_num_list.append(
+                ' '.join([indian_format(word, hindi_digits_with_zero) for word in trimmed_sent.split(' ')]))
+
+        self.assertEqual(expected_output, comma_sep_num_list)
+
+    def test_number_after_decimals_are_not_formatted_with_commas(self):
+        data = ['शून्य दशमलव शून्य आठ चार पाँच']
+        expected_output = ['0.0845']
+
+        inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
+
+        astr_list = []
+        comma_sep_num_list = []
+        inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
+        for sent in inverse_normalizer_prediction:
+            trimmed_sent = ' '.join(
+                [remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
+            astr_list.append(trimmed_sent)
+            comma_sep_num_list.append(
+                ' '.join([indian_format(word, hindi_digits_with_zero) for word in trimmed_sent.split(' ')]))
+
+        self.assertEqual(expected_output, comma_sep_num_list)
+
+    def test_numbers_with_decimal_parts_are_converted_to_formatted_numerals(self):
+        data = ['उसे एक सौ एक दशमलव तीन आठ शून्य बुखार है', 'चार करोड़ इक्कीस लाख दशमलव शून्य आठ']
+        expected_output = ['उसे 101.380 बुखार है', '4,21,00,000.08']
+
+        inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
+
+        astr_list = []
+        comma_sep_num_list = []
+        inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
+        for sent in inverse_normalizer_prediction:
+            trimmed_sent = ' '.join(
+                [remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
+            astr_list.append(trimmed_sent)
+            comma_sep_num_list.append(
+                ' '.join([indian_format(word, hindi_digits_with_zero) for word in trimmed_sent.split(' ')]))
+
+        self.assertEqual(expected_output, comma_sep_num_list)
+
+    def test_spoken_words_like_only_crore_lakh_and_thousand_are_converted_to_corresponding_numerals(self):
+        data = ['उसे हज़ार देदो', 'उसे करोड़ देदो', 'उसे लाख देदो', 'सौ']
+        expected_output = ['उसे 1,000 देदो', 'उसे 1,00,00,000 देदो', 'उसे 1,00,000 देदो', '100']
+
+        inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
+
+        astr_list = []
+        comma_sep_num_list = []
+        inverse_normalizer_prediction = [sent.replace('\r', '') for sent in inverse_normalizer_prediction]
+        for sent in inverse_normalizer_prediction:
+            trimmed_sent = ' '.join(
+                [remove_starting_zeros(word, hindi_digits_with_zero) for word in sent.split(' ')])
+            astr_list.append(trimmed_sent)
+            comma_sep_num_list.append(
+                ' '.join([indian_format(word, hindi_digits_with_zero) for word in trimmed_sent.split(' ')]))
+
+        self.assertEqual(expected_output, comma_sep_num_list)
+
+    def test_money_is_converted_to_corresponding_numerals(self):
+        data = ['उसे एक हज़ार डॉलर देदो', 'उसे एक हज़ार चार सौ बीस रुपये देदो']
+        expected_output = ['उसे $ 1,000 देदो', 'उसे ₹ 1,420 देदो']
 
         inverse_normalizer_prediction = inverse_normalizer(data, verbose=False)
 
