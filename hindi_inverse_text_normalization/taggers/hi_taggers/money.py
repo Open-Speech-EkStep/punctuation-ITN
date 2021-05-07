@@ -95,7 +95,7 @@ class MoneyFst(GraphFst):
             + ((NEMO_SIGMA - "one") @ cardinal_graph)
             + pynutil.insert("\"")
             + delete_extra_space
-            + graph_unit_plural
+            + (graph_unit_plural | graph_unit_singular)
             + (optional_cents_standalone | optional_cents_suffix)
         )
         graph_integer |= (
