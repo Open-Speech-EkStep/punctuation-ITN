@@ -13,6 +13,8 @@ data
 # model checkpoints 
 checkpoints
 
+.idea/
+
 #nohup
 *.out
 
