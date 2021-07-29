@@ -1,5 +1,5 @@
 import pandas as pd
-from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from training_params import TOKENIZER
 import torch
 
