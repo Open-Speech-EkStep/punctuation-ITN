@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoTokenizer
 
-TRAIN_DATA = 'data/tmp.csv'
+TRAIN_DATA = 'data/train.csv'
 VALID_DATA = 'data/valid.csv'
 MAX_LEN = 128
 BATCH_SIZE = 128
