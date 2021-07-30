@@ -12,7 +12,7 @@ runs
 data 
 # model checkpoints 
 checkpoints
-
+wandb/
 .idea/
 
 #nohup

@@ -13,6 +13,7 @@ from transformers import AlbertForTokenClassification, AdamW, get_linear_schedul
 import training_params
 from dataset_loader import PunctuationDataset
 from utils import process_data, folder_with_time_stamps
+import wandb
 
 warnings.filterwarnings('ignore')
 
@@ -60,7 +61,7 @@ else:
 
 optimizer = AdamW(
     optimizer_grouped_parameters,
-    lr=3e-5,
+    lr=training_params.LEARNING_RATE,
     eps=1e-8
 )
 
@@ -93,6 +94,16 @@ if torch.cuda.device_count() > 1:
 loss_values, validation_loss_values = [], []
 model.cuda()
 
+config = {
+  "learning_rate": training_params.LEARNING_RATE,
+  "batch_size": training_params.BATCH_SIZE,
+  'num_epochs': training_params.EPOCHS
+}
+
+wandb.init(project="test", config=config)
+wandb.watch(model)
+
+
 train_step_count = 0
 for epoch in range(starting_epoch, training_params.EPOCHS):
 
@@ -121,6 +132,7 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
 
         # loss for step
         writer.add_scalar("Training Loss- Step", loss.sum(), train_step_count)
+        wandb.log({'Training Loss - Step': loss.sum()})  
         train_step_count += 1
 
         torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=training_params.MAX_GRAD_NORM)
@@ -133,6 +145,7 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
     avg_train_loss = total_loss / len(train_data_loader)
     print("Average train loss: {}".format(avg_train_loss))
     writer.add_scalar("Training Loss", avg_train_loss, epoch)
+    wandb.log({'Training loss': avg_train_loss, 'epoch': epoch})
 
     state = {'epoch': epoch,
              'state_dict': model.state_dict(),
@@ -178,6 +191,8 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
     print("Validation loss: {}".format(eval_loss))
     writer.add_scalar("Validation Loss", eval_loss, epoch)
 
+    wandb.log({'Validation loss': eval_loss})
+
     pred_tags = [tag_values[p_i] for p, l in zip(predictions, true_labels) for p_i, l_i in zip(p, l) if
                  tag_values[l_i] != "PAD"]
     valid_tags = [tag_values[l_i] for l in true_labels for l_i in l if tag_values[l_i] != "PAD"]
@@ -190,3 +205,5 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
                                                                    labels=np.unique(pred_tags))))
     writer.add_scalar('Validation Accuracy', val_accuracy, epoch)
     writer.add_scalar('Validation F1 score', val_f1_score, epoch)
+    wandb.log({'Validation Accuracy': val_accuracy})
+    wandb.log({'Validation F1 Score': val_f1_score})

@@ -14,3 +14,4 @@ CHECKPOINT_DIR = 'checkpoints'
 LOG_DIR = 'runs'
 LOAD_CHECKPOINT = False
 CHECKPOINT_PATH = 'checkpoints/checkpoint_last.pt'
+LEARNING_RATE = 3e-5
