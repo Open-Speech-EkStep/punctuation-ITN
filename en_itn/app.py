@@ -2,7 +2,7 @@ import streamlit as st
 from run_en_punct_itn import post_process_text
 from nemo.collections.nlp.models import PunctuationCapitalizationModel
 
-MODEL_PATH = '/home/neeraj/ekstep-speech-recognition/punctuation-ITN/en_itn/punct_model/punctuation_en_bert.nemo'
+MODEL_PATH = '/path/to/punctuation_en_bert.nemo'
 
 
 @st.cache(allow_output_mutation=True)

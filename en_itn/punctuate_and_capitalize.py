@@ -7,7 +7,7 @@ def add_punctuation_and_capitalization(sent, model):
 
 if __name__ == "__main__":
     model = PunctuationCapitalizationModel.restore_from(
-        "/home/neeraj/ekstep-speech-recognition/punctuation-ITN/en_itn/punct_model/punctuation_en_bert.nemo")
+        "path/to/punctuation_en_bert.nemo")
 
     # try the model on a few examples
     punctuated_list = model.add_punctuation_capitalization(['how are you', 'whats up'])
