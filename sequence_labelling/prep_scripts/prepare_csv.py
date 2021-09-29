@@ -4,6 +4,7 @@ import pandas as pd
 import sys
 from tqdm import tqdm
 import timeit
+from joblib import Parallel, delayed
 
 inppath = sys.argv[1] 
 outpath = sys.argv[2]
@@ -17,8 +18,9 @@ line_list = df['sentence'].to_list()
 
 def fix_for_first_ch_punc(line):
     if line and (line[0] in ['.', ',', '?']):
-            line = line[1:]
-    return ' '.join(line.split())
+        line = line[1:]
+        return ' '.join(line.split())
+    return line
 
 def split_sen_with_label(line):
     line = fix_for_first_ch_punc(line)
@@ -41,15 +43,22 @@ def split_sen_with_label(line):
             
     yield words, labels
 
-outfile = open(outpath, 'w', encoding='utf-8')
+outfile = open(outpath, 'w')
+print('sentence_index,sentence,label', file=outfile)
 
-print("sentence,word,label", file=outfile)
+def process(ix, line):
+    g = split_sen_with_label(line)
+    words, labels = next(g)
+    if len(words) == len(labels):
+        return [ix+1," ".join(words)," ".join(labels)]
 
 starttime = timeit.default_timer()
-for ix, line in tqdm(enumerate(line_list)):
-    for words, labels in split_sen_with_label(line):
-        for word, label in zip(words, labels):
-            print(ix+1, word, label, sep=',', file=outfile)
+
+out = Parallel(n_jobs=-1)(delayed(process)(ix, line) for ix, line in tqdm(enumerate(line_list)))
+
+for i in tqdm(out):
+    print(*i, sep = ',', file=outfile)
+
 print("Time taken -> ", timeit.default_timer() - starttime)
 
 outfile.close()
