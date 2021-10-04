@@ -2,9 +2,11 @@ import pandas as pd
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from training_params import TOKENIZER
 import torch
+from joblib import Parallel, delayed
+from tqdm import tqdm
+import numpy as np
 
-
-class PunctuationDataset:
+class PunctuationDataset(torch.utils.data.Dataset):
     def __init__(self, texts, labels, tag2idx):
         self.texts = texts
         self.labels = labels
@@ -14,8 +16,8 @@ class PunctuationDataset:
         return len(self.texts)
 
     def __getitem__(self, item):
-        sentence = self.texts[item]
-        text_label = self.labels[item]
+        sentence = self.texts[item].split()
+        text_label = self.labels[item].split()
 
         tokenized_sentence = []
         labels = []
@@ -49,13 +51,23 @@ class PunctuationDataset:
 
 
 if __name__=="__main__":
-    df = pd.read_csv('../input/train.csv')
-    tag_values = list(set(df["label"].values))
+    df = pd.read_csv('data/train_sample.csv')
+    print("File Read")
+    tag_values = ['blank', 'end', 'comma', 'qm']
     tag_values.append("PAD")
     encoder = {t: i for i, t in enumerate(tag_values)}
-    sentences = df.groupby("sentence")["word"].apply(list).values
-    punc = df.groupby("sentence")["label"].apply(list).values
-    d = PunctuationDataset(sentences, punc, encoder).__getitem__(0)
+    print(encoder)
+    '''
+    def split_string(line):
+        return str(line).split()
+    sentences = Parallel(n_jobs=-1)(delayed(split_string)(s) for s in tqdm(df['sentence']))
+    sentences = np.asarray(sentences)
+    punctuations = Parallel(n_jobs=-1)(delayed(split_string)(s) for s in tqdm(df['label']))
+    punctuations = np.asarray(punctuations)
+    '''
+    sentences = df['sentence'].values
+    punctuations = df['label'].values
+    d = PunctuationDataset(sentences, punctuations, encoder).__getitem__(0)
     print(type(d))
     print(d['ids'])
     print(d['mask'])
