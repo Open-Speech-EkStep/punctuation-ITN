@@ -45,7 +45,6 @@ def split_sen_with_label(line):
 
 outfile = open(outpath, 'w')
 print('sentence_index,sentence,label', file=outfile)
-
 def process(ix, line):
     g = split_sen_with_label(line)
     words, labels = next(g)
