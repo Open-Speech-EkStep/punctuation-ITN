@@ -9,10 +9,13 @@ TEST_CLEAN_NAME : 'test_clean'
 TRAIN_NAME : 'train'
 VALID_NAME : 'valid'
 TEST_NAME : 'test'
+MODEL_NAME : 'checkpoint_best'
+TEST_RESULT_NAME : 'test_classification_report'
 SAMPLE_LEN : 6000
 TEST_AND_VALID_LEN : 500
 RAW_FOLDER : 'gs://punctuation-itn/punctuation_data/bengali/data/raw'
 PROCESSED_FOLDER : 'gs://punctuation-itn/punctuation_data/bengali/data/processed'
 TRAINING_DATA_FOLDER : 'gs://punctuation-itn/punctuation_data/bengali/data/training'
+CHECKPOINTS_FOLDER : 'gs://punctuation-itn/punctuation_data/bengali/checkpoints'
 RAW_FILE_NAME : 'bn.txt'
 PROCESSED_TSV_FILENAME : 'bn_processed.tsv'

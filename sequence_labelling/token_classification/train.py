@@ -1,6 +1,10 @@
 import os
+import pandas as pd
 import warnings
 import json
+import yaml
+
+from google.cloud import storage
 
 import numpy as np
 import torch
@@ -17,15 +21,39 @@ import wandb
 
 warnings.filterwarnings('ignore')
 
-log_folder, checkpoint_folder, train_encoder_file_path = folder_with_time_stamps(training_params.LOG_DIR,
+log_folder, checkpoint_folder, train_encoder_file_path, _ = folder_with_time_stamps(training_params.LOG_DIR,
                                                                                  training_params.CHECKPOINT_DIR)
+
+print(f"train encoder path -> {train_encoder_file_path}")
+
 os.makedirs(log_folder, exist_ok=True)
 os.makedirs(checkpoint_folder, exist_ok=True)
 
 writer = SummaryWriter(log_folder)
 
-train_sentences, train_labels, train_encoder, tag_values = process_data(training_params.TRAIN_DATA)
-valid_sentences, valid_labels, _, _ = process_data(training_params.VALID_DATA)
+config = {
+  "learning_rate": training_params.LEARNING_RATE,
+  "batch_size": training_params.BATCH_SIZE,
+  "num_epochs" : training_params.EPOCHS,
+  "max_len" : training_params.MAX_LEN,
+  "load_checkpoint" : training_params.LOAD_CHECKPOINT,
+  "max_grad_norm" : training_params.MAX_GRAD_NORM
+}
+
+names = yaml.load(open('../config.yaml'))
+PROJECT_NAME = names['PROJECT_NAME']
+
+run = wandb.init(project=PROJECT_NAME, job_type='train_model' ,config=config)
+cfg = wandb.config
+
+train_data = run.use_artifact(names['TRAIN_NAME'] + ':latest', type='train_data')
+train_dir = train_data.download()
+
+valid_data = run.use_artifact(names['VALID_NAME'] + ':latest', type='valid_data')
+valid_dir = valid_data.download()
+
+train_sentences, train_labels, train_encoder, tag_values = process_data(train_dir+'/train.csv')
+valid_sentences, valid_labels, _, _ = process_data(valid_dir + '/valid.csv')
 
 with open(train_encoder_file_path, "w") as outfile:
     json.dump(train_encoder, outfile)
@@ -55,6 +83,7 @@ if training_params.FULL_FINETUNING:
         {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
          'weight_decay_rate': 0.0}
     ]
+
 else:
     param_optimizer = list(model.classifier.named_parameters())
     optimizer_grouped_parameters = [{"params": [p for n, p in param_optimizer]}]
@@ -94,13 +123,8 @@ if torch.cuda.device_count() > 1:
 loss_values, validation_loss_values = [], []
 model.cuda()
 
-config = {
-  "learning_rate": training_params.LEARNING_RATE,
-  "batch_size": training_params.BATCH_SIZE,
-  'num_epochs': training_params.EPOCHS
-}
 
-wandb.init(project="test", config=config)
+
 wandb.watch(model)
 
 
@@ -132,7 +156,7 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
 
         # loss for step
         writer.add_scalar("Training Loss- Step", loss.sum(), train_step_count)
-        wandb.log({'Training Loss - Step': loss.sum()})  
+        run.log({'Training Loss - Step': loss.sum()})  
         train_step_count += 1
 
         torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=training_params.MAX_GRAD_NORM)
@@ -145,7 +169,7 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
     avg_train_loss = total_loss / len(train_data_loader)
     print("Average train loss: {}".format(avg_train_loss))
     writer.add_scalar("Training Loss", avg_train_loss, epoch)
-    wandb.log({'Training loss': avg_train_loss, 'epoch': epoch})
+    run.log({'Training loss': avg_train_loss, 'epoch': epoch})
 
     state = {'epoch': epoch,
              'state_dict': model.state_dict(),
@@ -191,7 +215,7 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
     print("Validation loss: {}".format(eval_loss))
     writer.add_scalar("Validation Loss", eval_loss, epoch)
 
-    wandb.log({'Validation loss': eval_loss})
+    run.log({'Validation loss': eval_loss})
 
     pred_tags = [tag_values[p_i] for p, l in zip(predictions, true_labels) for p_i, l_i in zip(p, l) if
                  tag_values[l_i] != "PAD"]
@@ -199,11 +223,33 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
 
     val_accuracy = accuracy_score(valid_tags, pred_tags)
     val_f1_score = f1_score(valid_tags, pred_tags, average='macro')
+    report = classification_report(valid_tags, pred_tags, output_dict=True, labels=np.unique(pred_tags))
+
+    df_report = pd.DataFrame(report).transpose() 
+    df_report['categories'] = list(df_report.index) 
+    df_report = df_report[ ['categories'] + [ col for col in df_report.columns if col != 'categories' ] ] 
+    classification_table = wandb.Table(dataframe=df_report) 
+    run.log({f'Confusion Matrix Epoch {epoch}': classification_table})
+
     print("Validation Accuracy: {}".format(val_accuracy))
     print("Validation F1-Score: {}".format(val_f1_score))
-    print("Classification Report: {}".format(classification_report(valid_tags, pred_tags, output_dict=True,
-                                                                   labels=np.unique(pred_tags))))
+    print("Classification Report: {}".format(report))
     writer.add_scalar('Validation Accuracy', val_accuracy, epoch)
     writer.add_scalar('Validation F1 score', val_f1_score, epoch)
-    wandb.log({'Validation Accuracy': val_accuracy})
-    wandb.log({'Validation F1 Score': val_f1_score})
+    run.log({'Validation Accuracy': val_accuracy})
+    run.log({'Validation F1 Score': val_f1_score})
+
+    checkpoint_bucket_path = names['CHECKPOINTS_FOLDER']
+    os.system('gsutil -m cp '+checkpoint_folder+'/checkpoint_best.pt'+' '+checkpoint_bucket_path)
+    MODEL_NAME = names['MODEL_NAME']
+    
+    trained_model_artifact = wandb.Artifact(
+        MODEL_NAME, type="model",
+        description="trained albert token classification",
+        metadata=dict(cfg))
+    
+    trained_model_artifact.add_reference(os.path.join(checkpoint_bucket_path, 'checkpoint_best.pt'))
+    
+    run.log_artifact(trained_model_artifact)
+    
+run.finish()

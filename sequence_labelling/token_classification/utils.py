@@ -23,8 +23,7 @@ def folder_with_time_stamps(log_folder, checkpoint_folder):
     folder_hook = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     log_saving = log_folder + '/' + folder_hook
     checkpoint_saving = checkpoint_folder + '/' + folder_hook
-    train_encoder_file_path = '/'.join(training_params.TRAIN_DATA.split('/')[:-1]) + '/label_encoder_' \
-                              + folder_hook + '.json'
+    train_encoder_file_path = 'label_encoder_' + folder_hook + '.json'
     return log_saving, checkpoint_saving, train_encoder_file_path, folder_hook
 
 
