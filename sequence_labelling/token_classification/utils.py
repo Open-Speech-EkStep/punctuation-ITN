@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 def process_data(data_csv):
     df = pd.read_csv(data_csv)
+    df.dropna(inplace = True)
     tag_values = ['blank', 'end', 'comma', 'qm']
     tag_values.append("PAD")
     encoder = {t: i for i, t in enumerate(tag_values)}

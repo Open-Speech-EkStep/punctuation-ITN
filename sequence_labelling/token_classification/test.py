@@ -41,7 +41,7 @@ model = AlbertForTokenClassification.from_pretrained('ai4bharat/indic-bert',
                                                      output_attentions=False,
                                                      output_hidden_states=False)
 
-if torch.cuda.device_count() > 0:
+if torch.cuda.device_count() > 1:
     print("Using ", torch.cuda.device_count(), "GPUs")
     model = nn.DataParallel(model)
 
