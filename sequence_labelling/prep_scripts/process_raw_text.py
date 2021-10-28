@@ -5,7 +5,6 @@ import yaml
 import argparse
 from tqdm import tqdm
 from joblib import Parallel, delayed
-from google.cloud import storage
 
 from indicnlp.tokenize.indic_tokenize import trivial_tokenize
 from indicnlp.normalize.indic_normalize import IndicNormalizerFactory
