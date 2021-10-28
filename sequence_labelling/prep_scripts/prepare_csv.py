@@ -39,7 +39,7 @@ class PrepareCsv:
         yield words, labels
     
     def transform_data(self, inppath, outpath):
-        df = pd.read_csv(inppath)
+        df = pd.read_csv(inppath, sep='\t')
         line_list = df['sentence'].to_list()
 
         outfile = open(outpath, 'w')

@@ -58,9 +58,9 @@ class SplitData:
         print("punctutaion ratio test :")
         self.extract_punc_ration(df_test)
         
-        df_train.to_csv('train_processed.tsv', index=False)
-        df_valid.to_csv('valid_processed.tsv', index=False)
-        df_test.to_csv('test_processed.tsv', index=False)
+        df_train.to_csv('train_processed.tsv', sep='\t',  index=False)
+        df_valid.to_csv('valid_processed.tsv', sep='\t',  index=False)
+        df_test.to_csv('test_processed.tsv', sep='\t',  index=False)
     
     def upload_file_to_bucket(self, src, dst):
         cmd = 'gsutil -m cp ' + src + ' ' + dst
