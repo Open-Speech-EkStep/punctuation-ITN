@@ -41,6 +41,10 @@ config = {
 }
 
 names = yaml.load(open('../config.yaml'))
+
+# edit bucket path for checkpoints
+checkpoint_bucket_path = ''
+
 PROJECT_NAME = names['PROJECT_NAME']
 
 run = wandb.init(project=PROJECT_NAME, job_type='train_model' ,config=config)
@@ -239,7 +243,6 @@ for epoch in range(starting_epoch, training_params.EPOCHS):
     run.log({'Validation Accuracy': val_accuracy})
     run.log({'Validation F1 Score': val_f1_score})
 
-    checkpoint_bucket_path = names['CHECKPOINTS_FOLDER']
     os.system('gsutil -m cp '+checkpoint_folder+'/checkpoint_best.pt'+' '+checkpoint_bucket_path)
     MODEL_NAME = names['MODEL_NAME']
     
