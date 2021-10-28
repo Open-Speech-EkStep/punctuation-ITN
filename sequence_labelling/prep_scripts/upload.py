@@ -7,11 +7,10 @@ class Upload:
         self.config_path = config_path
         self.names = yaml.safe_load(open(self.config_path))
 
-    def upload_raw_data(self):
+    def upload_raw_data(self, raw_folder):
         PROJECT_NAME = self.names['PROJECT_NAME']
         RAW_DATA_NAME = self.names['RAW_DATA_NAME']
         DICT_NAME = self.names['DICT_NAME']
-        raw_folder = self.names['RAW_FOLDER']
         fname = self.names['RAW_FILE_NAME']
 
         run = wandb.init(project=PROJECT_NAME, job_type="upload")

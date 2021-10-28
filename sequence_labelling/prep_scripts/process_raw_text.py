@@ -64,8 +64,7 @@ class ProcessRawText:
         print(cmd)
         os.system(cmd)
 
-    def get_clean_data(self):
-        processed_folder = self.names['PROCESSED_FOLDER']
+    def get_clean_data(self, processed_folder):
         PROJECT_NAME = self.names['PROJECT_NAME']
         RAW_DATA_NAME = self.names['RAW_DATA_NAME']
         DICT_NAME = self.names['DICT_NAME']

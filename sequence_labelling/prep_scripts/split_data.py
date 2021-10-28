@@ -67,8 +67,7 @@ class SplitData:
         print(cmd)
         os.system(cmd)
     
-    def split_data(self):
-        processed_folder = self.names['PROCESSED_FOLDER']
+    def split_data(self, processed_folder):
         data_size = self.names['SAMPLE_LEN']
         test_valid_size = self.names['TEST_AND_VALID_LEN']
         PROJECT_NAME = self.names['PROJECT_NAME']

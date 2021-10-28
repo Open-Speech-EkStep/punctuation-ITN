@@ -64,9 +64,8 @@ class PrepareCsv:
         print(cmd)
         os.system(cmd)
     
-    def get_training_data(self):
-        training_folder = self.names['TRAINING_DATA_FOLDER']
-
+    def get_training_data(self, training_folder):
+        
         PROJECT_NAME = self.names['PROJECT_NAME']
         TRAIN_CLEAN_NAME = self.names['TRAIN_CLEAN_NAME']
         VALID_CLEAN_NAME = self.names['VALID_CLEAN_NAME']
