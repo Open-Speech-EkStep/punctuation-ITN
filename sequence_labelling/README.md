@@ -30,3 +30,9 @@ where label maps what is the next punctuation symbol for the corresponding word 
 
 To start training change training parameters from [training_params.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/token_classification/training_params.py) and run  [train.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/token_classification/train.py)
 
+
+## 3. Inference
+
+To infer sentences check this file [inference.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/token_classification/inference.py)
+
+Also there is a spearate repository to try already built punctation model in indic langauges [indic-punct](https://github.com/Open-Speech-EkStep/indic-punct#punctuation)
