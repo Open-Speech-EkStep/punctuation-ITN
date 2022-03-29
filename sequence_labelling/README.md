@@ -7,7 +7,9 @@ Code is linked with Wandb to monitor our training in real-time. And all input da
 
 ## 1. Prepare data for training
 
-make changes in [config.yaml](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/config.yaml) based on your data. and run [make_data.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/make_data.py) to generate train, test and valid csvs.
+First upload raw data text file and dictionary file in gcp bucket, make changes in [config.yaml](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/config.yaml) based on your data. and run [make_data.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/make_data.py) to generate train, test and valid csvs.
+
+In [config.yaml](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/config.yaml) edit PROJECT_NAME for name of wandb project, LANG language code, RAW_FILE_NAME and DICT_NAME for raw text file and dict file name uploaded in bucket, after [process_raw_text.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/prep_scripts/process_raw_text.py) length of corpus will be reduced SAMPLE_LEN will filter out these many sentences for cleaned text and TEST_AND_VALID_LEN will separated out these many sentences for valid and test set
 
 Cleaning steps
 1. normalize text corpus
@@ -28,7 +30,8 @@ where label maps what is the next punctuation symbol for the corresponding word 
 
 
 
-To start training change training parameters from [training_params.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/token_classification/training_params.py) and run  [train.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/token_classification/train.py)
+To start training change training parameters from [training_params.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/token_classification/training_params.py) and run  [train.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/token_classification/train.py). In train.py edit variable 'checkpoint_bucket_path' write bucket path where to store checkpoints.
+
 
 
 ## 3. Inference
