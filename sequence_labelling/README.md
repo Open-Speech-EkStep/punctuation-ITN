@@ -39,3 +39,24 @@ To start training change training parameters from [training_params.py](https://g
 To infer sentences check this file [inference.py](https://github.com/Open-Speech-EkStep/punctuation-ITN/blob/wandb-v1/sequence_labelling/token_classification/inference.py)
 
 Also there is a spearate repository to try already built punctation model in indic langauges [indic-punct](https://github.com/Open-Speech-EkStep/indic-punct#punctuation)
+
+## Citation 
+```
+@misc{https://doi.org/10.48550/arxiv.2203.16825,
+  doi = {10.48550/ARXIV.2203.16825},
+  
+  url = {https://arxiv.org/abs/2203.16825},
+  
+  author = {Gupta, Anirudh and Chhimwal, Neeraj and Dhuriya, Ankur and Gaur, Rishabh and Shah, Priyanshi and Chadha, Harveen Singh and Raghavan, Vivek},
+  
+  keywords = {Computation and Language (cs.CL), FOS: Computer and information sciences, FOS: Computer and information sciences},
+  
+  title = {indic-punct: An automatic punctuation restoration and inverse text normalization framework for Indic languages},
+  
+  publisher = {arXiv},
+  
+  year = {2022},
+  
+  copyright = {Creative Commons Attribution 4.0 International}
+}
+```
